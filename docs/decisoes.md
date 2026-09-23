@@ -17,6 +17,8 @@ A leitura estrutural da implementação standard que sustenta a BOI mostrou nume
 
 A gravação em DEV ainda precisa provar o comportamento completo de draft, locks, autorização, mensagens e commit. Uma leitura depois do commit confirma o estado corrente; não é um mecanismo de reversão. Em resultado incerto, o log pede reconciliação antes de reprocessar; não há retentativa cega de CREATE.
 
+A ativação preserva a chave preliminar `%pky` (`%pid` e `%key`), necessária para identificar drafts novos com numeração tardia. O diagnóstico também registra `%fail-cause`, pois uma resposta FAILED pode não ter texto correspondente em REPORTED. A [correção da ativação](correcao-ativacao-boi.md) mantém a política aprovada de um par por commit.
+
 ## Precisão e orientação
 
 O campo de compra BACEN já representa BRL por unidade da moeda consultada. Para D, normalizar pela razão unidades-origem/unidades-destino. Para I, usar unidades-destino/unidades-origem e manter o indicador indireto. O campo released do BOI determina a precisão usada na comparação.

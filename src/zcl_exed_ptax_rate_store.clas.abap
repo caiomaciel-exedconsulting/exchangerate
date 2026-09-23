@@ -14,6 +14,11 @@ CLASS zcl_exed_ptax_rate_store DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES failed_response TYPE RESPONSE FOR FAILED EARLY i_currencyexchangeratetp_2.
     TYPES reported_response TYPE RESPONSE FOR REPORTED EARLY i_currencyexchangeratetp_2.
     TYPES rate_keys TYPE TABLE FOR READ IMPORT i_currencyexchangeratetp_2.
+    TYPES activation_requests TYPE TABLE FOR ACTION IMPORT i_currencyexchangeratetp_2~Activate.
+    CLASS-METHODS build_activation_requests
+      IMPORTING keys TYPE rate_keys
+      RETURNING VALUE(requests) TYPE activation_requests
+      RAISING zcx_exed_ptax.
     CLASS-METHODS normalize
       IMPORTING buy_rate    TYPE decfloat34
                 quotation   TYPE zif_exed_ptax_types=>quotation_notation
@@ -203,6 +208,22 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
   METHOD check_response.
     DATA(has_error) = xsdbool( failed-exchangerate IS NOT INITIAL ).
     DATA message_text TYPE string.
+    "FAILED pode informar a causa mesmo quando REPORTED não contém mensagem.
+    LOOP AT failed-exchangerate INTO DATA(failed_rate).
+      DATA(cause_name) = SWITCH string( failed_rate-%fail-cause
+        WHEN if_abap_behv=>cause-not_found THEN 'NOT_FOUND'
+        WHEN if_abap_behv=>cause-unauthorized THEN 'UNAUTHORIZED'
+        WHEN if_abap_behv=>cause-locked THEN 'LOCKED'
+        WHEN if_abap_behv=>cause-conflict THEN 'CONFLICT'
+        WHEN if_abap_behv=>cause-disabled THEN 'DISABLED'
+        WHEN if_abap_behv=>cause-readonly THEN 'READONLY'
+        WHEN if_abap_behv=>cause-dependency THEN 'DEPENDENCY'
+        WHEN if_abap_behv=>cause-unspecific THEN 'UNSPECIFIC'
+        ELSE 'OUTRA' ).
+      message_text = message_text &&
+        | FAILED: { cause_name } ({ CONV i( failed_rate-%fail-cause ) }); PID={ failed_rate-%pid }; | &&
+        |chave={ failed_rate-ExchangeRateType }/{ failed_rate-SourceCurrency }/{ failed_rate-TargetCurrency }/{ failed_rate-ExchangeRateEffectiveDate DATE = ISO }.|.
+    ENDLOOP.
     LOOP AT reported-exchangerate INTO DATA(message).
       IF message-%msg IS BOUND.
         IF message-%msg->m_severity = if_abap_behv_message=>severity-error.
@@ -222,6 +243,15 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     IF has_error = abap_true.
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = |{ step }: falha no BOI. { message_text }| ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD build_activation_requests.
+    IF lines( keys ) <> 1.
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Ativacao exige exatamente um rascunho.' ).
+    ENDIF.
+    "Activate usa a chave preliminar: PID + chave, sem o indicador de draft.
+    requests = VALUE #( FOR key IN keys
+      ( %cid = 'ACTIVATE_PTAX' %pky = key-%pky ) ).
   ENDMETHOD.
 
   METHOD stage_one.
@@ -304,10 +334,10 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     check_response( failed = failed reported = reported step = 'Prepare' ).
     "Prepare bloqueia o registro; comparar novamente o estado persistido sob bloqueio.
     revalidate( item ).
+    DATA(requests) = build_activation_requests( keys ).
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate EXECUTE Activate
-      FROM VALUE #( FOR activation_key IN keys
-        ( %cid = 'ACTIVATE_PTAX' %key = activation_key-%key ) )
+      FROM requests
       FAILED failed REPORTED reported.
     check_response( failed = failed reported = reported step = 'Activate' ).
   ENDMETHOD.

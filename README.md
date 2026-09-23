@@ -2,7 +2,7 @@
 
 Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fechamento diário do BACEN e mantém taxas do tipo **M**, sempre pela **cotação de compra**, usando a BOI released `I_CurrencyExchangeRateTP_2`.
 
-**Entrega de fontes para pull pelo ADT.** O responsável confirmou ATC e ABAP Unit sem erros na versão anterior e publicou o Business Catalog e a comunicação. A primeira execução do job revelou uma data de referência em branco e um diagnóstico genérico. Esta correção normaliza datas vazias e preserva o detalhe das exceções; os novos testes ainda precisam ser executados no SAP. O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [correção e reexecução do job](docs/correcao-execucao-job.md) e [validações e pendências](docs/validacao.md).
+**Entrega de fontes para pull pelo ADT.** A simulação enviada pelo responsável concluiu com cinco boletins, sete criações previstas e zero erros. A execução em manutenção falhou em `Activate` nos sete pares, antes dos commits. Esta correção preserva a identidade provisória do draft na ativação e amplia o diagnóstico RAP; a gravação corrigida ainda precisa ser validada no SAP. Consulte [correção da ativação](docs/correcao-ativacao-boi.md), [correção anterior dos parâmetros](docs/correcao-execucao-job.md) e [validações e pendências](docs/validacao.md).
 
 ## Comportamento
 

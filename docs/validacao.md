@@ -2,7 +2,7 @@
 
 O núcleo contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado, além dos exports IAM acrescentados pelo responsável. As verificações abaixo qualificam os fontes para importação e validação no ADT; não representam execução do job no SAP.
 
-**Atualização em 23/09/2026:** o responsável confirmou ATC e ABAP Unit sem erros na versão anterior e sistemas/cenário de comunicação criados. Depois publicou o catálogo IAM e iniciou o job, que cancelou com referência vazia no log. A correção atual acrescenta sete testes de parâmetros e cinco de exceção: a suíte passa a 40 métodos, ainda sem execução desta versão no SAP. Os resultados anteriores são relato do responsável, sem execução independente pelo assistente. Consulte [correção da execução](correcao-execucao-job.md).
+**Atualização em 23/09/2026:** depois da correção dos parâmetros, a imagem enviada pelo responsável confirmou simulação concluída, cinco boletins para 22/09/2026 e sete criações previstas sem erros. A manutenção falhou em Activate nos sete pares, com descarte antes dos commits. A correção atual preserva o PID na entrada de ativação e acrescenta diagnóstico de FAILED e sete testes. A baseline sincronizada pelo responsável continha 39 testes; agora são 46, ainda sem execução desta versão no SAP. Consulte [correção da ativação](correcao-ativacao-boi.md).
 
 ## Verificações executadas
 
@@ -28,11 +28,11 @@ Leituras somente de consulta confirmaram API State C1 e contratos dos principais
 |---|---:|---|
 | ZCL_EXED_PTAX_BACEN | 8 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
 | ZCL_EXED_PTAX_CALENDAR | 5 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
-| ZCL_EXED_PTAX_RATE_STORE | 8 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
+| ZCL_EXED_PTAX_RATE_STORE | 15 | Oito anteriores e sete regressões de ativação/diagnóstico; execução desta versão pendente |
 | ZCL_EXED_PTAX_SERVICE | 7 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
-| ZCL_EXED_PTAX_JOB | 7 | Novos testes de parâmetros; execução no SAP pendente |
+| ZCL_EXED_PTAX_JOB | 6 | Quantidade após sincronização do responsável em 329268b; fontes preservados |
 | ZCX_EXED_PTAX | 5 | Novos testes de mensagem e encadeamento; execução no SAP pendente |
-| Total | 40 nos fontes | Suíte anterior de 28 confirmada sem erros; reexecução da suíte ampliada pendente |
+| Total | 46 nos fontes | Confirmação anterior de testes não comprova esta versão; reexecução pendente |
 
 Os testes acompanham os fontes em arquivos `.clas.testclasses.abap`. A existência e a análise estática desses arquivos não são resultados de ABAP Unit. Casos de integração com persistência, locks e save sequence exigem validação no tenant.
 
@@ -56,15 +56,15 @@ Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após
 
 ## Verificações pendentes no SAP
 
-1. Importar/ativar a correção de `ZCL_EXED_PTAX_JOB` e `ZCX_EXED_PTAX`, incluindo seus testes, e executar ATC e os 40 métodos de ABAP Unit. Os testes locais novos não executam o job, HTTP ou gravação de taxas.
-2. Repetir o diagnóstico com `P_SIMULATE = X`, datas vazias, calendário `BR` e fuso `BRAZIL`; conferir data válida e modo `SIMULACAO` no log. O usuário já iniciou o job após configurar acesso; manter o [guia de autorizações](autorizacoes.md) para outros usuários/ambientes.
-3. Conferir publicação e arrangement do cenário já criado e testar HTTPS com o BACEN a partir do tenant, conforme [comunicacao.md](comunicacao.md).
-4. Confirmar o calendário legado `BR`, seu mapeamento FHC, cobertura de datas, fatores de conversão e regras do fuso configurado. `BRAZIL` é o valor inicial do parâmetro; sua existência e correspondência ao fuso de Brasília precisam ser conferidas no tenant.
-5. Executar simulação com boletins conhecidos e conferir data, sete pares, orientação D/I, precisão, fatores e Application Log. Validar ausência de uma moeda sem impedir as demais e sem recuar a data.
+1. Importar/ativar `ZCL_EXED_PTAX_RATE_STORE` e seus testes; executar ATC e os 46 métodos de ABAP Unit. Os novos testes não executam EML, HTTP ou gravação de taxas.
+2. Repetir em DEV a manutenção de 22/09/2026 e depois a reexecução da mesma data, conforme [correcao-ativacao-boi.md](correcao-ativacao-boi.md). Se as chaves continuarem ausentes, esperar sete criações confirmadas na primeira e sete iguais na segunda.
+3. A simulação recebida comprova consulta HTTPS do job às cinco moedas nessa execução. Para outros ambientes, conferir cenário, arrangement e autorizações conforme [comunicacao.md](comunicacao.md) e [autorizacoes.md](autorizacoes.md).
+4. A execução automática usou referência 23/09/2026 e encontrou 22/09/2026 pelo calendário BR. Ainda validar feriados, virada de ano, cobertura do calendário, fatores diferentes de 1/1 e limites de precisão relevantes.
+5. Validar ausência de uma moeda sem impedir as demais e sem recuar a data. A simulação recebida encontrou boletins de todas as moedas e não cobre esse cenário.
 6. Em DEV, provar criação, igualdade, atualização e reexecução pela BOI. Validar autorizações, locks, concorrência, erro em um par com preservação dos demais, mensagem de falha do job e reconciliação após resultado de commit incerto.
 7. Após aceite operacional, configurar execução diária às 07:00 de Brasília, com datas vazias e simulação desmarcada. Coordenar a desativação do RPA para evitar manutenção concorrente.
 
-Na preparação inicial, o assistente não executou ativação SAP, ATC, ABAP Unit, gravação real de taxas, comunicação HTTPS do tenant ou agendamento produtivo. Posteriormente, o responsável informou a ativação, compartilhou os erros anteriores e confirmou ATC/ABAP Unit sem erros após as correções do parser. Essa confirmação se refere à versão anterior: a nova correção dos parâmetros e da exceção exige a reexecução indicada acima. O template distribuído inicia em simulação; o operador deve conferir o valor na execução agendada.
+O assistente não executou o job, EML ou gravação real de taxas. O responsável compartilhou as execuções de simulação e manutenção descritas acima e a confirmação anterior de ATC/ABAP Unit sem erros. Esses resultados não substituem a revalidação da nova correção de Activate. O template distribuído inicia em simulação; o operador deve conferir o valor na execução agendada.
 
 ## Governança
 
