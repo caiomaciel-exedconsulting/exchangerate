@@ -2,6 +2,8 @@
 
 Esta entrega contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado. As verificações abaixo qualificam os fontes para importação e validação no ADT; não representam execução do job no SAP.
 
+**Atualização em 23/09/2026:** o responsável confirmou nesta conversa ATC e ABAP Unit sem erros e sistemas/cenário de comunicação criados. Resultado registrado conforme relato do responsável, sem nova execução independente pelo assistente ou novo relatório anexado. O acesso ao job permanece pendente da configuração de Business Catalog, Business Role e atribuição ao usuário. O procedimento omitido da entrega inicial foi incluído em [autorizacoes.md](autorizacoes.md).
+
 ## Verificações executadas
 
 | Verificação | Resultado |
@@ -24,11 +26,11 @@ Leituras somente de consulta confirmaram API State C1 e contratos dos principais
 
 | Classe | Métodos de teste escritos | Execução no SAP |
 |---|---:|---|
-| ZCL_EXED_PTAX_BACEN | 8 | Última execução enviada: três erros na comparação da data; nova correção aguarda execução |
-| ZCL_EXED_PTAX_CALENDAR | 5 | 5 sucessos na execução enviada pelo responsável |
-| ZCL_EXED_PTAX_RATE_STORE | 8 | 8 sucessos na execução enviada pelo responsável |
-| ZCL_EXED_PTAX_SERVICE | 7 | 7 sucessos na execução enviada pelo responsável |
-| Total | 28 | Primeira execução: 24 sucessos em 26 testes. Após ampliar a suíte, foram relatados três erros; nova execução pendente |
+| ZCL_EXED_PTAX_BACEN | 8 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
+| ZCL_EXED_PTAX_CALENDAR | 5 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
+| ZCL_EXED_PTAX_RATE_STORE | 8 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
+| ZCL_EXED_PTAX_SERVICE | 7 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
+| Total | 28 nos fontes | ABAP Unit sem erros, conforme confirmação do responsável em 23/09/2026 |
 
 Os testes acompanham os fontes em arquivos `.clas.testclasses.abap`. A existência e a análise estática desses arquivos não são resultados de ABAP Unit. Casos de integração com persistência, locks e save sequence exigem validação no tenant.
 
@@ -48,23 +50,23 @@ Depois desse ajuste, o responsável enviou três erros em `MAP_PURCHASE_QUOTE`, 
 
 A comparação redundante do separador foi removida; o padrão `\x20` continua exigindo exatamente um espaço. A comparação dos dez primeiros caracteres com a data solicitada permanece intacta. O teste de data divergente agora verifica a mensagem específica da exceção para datas anterior e posterior, evitando um falso sucesso causado por rejeição indevida do formato. Os casos positivos também conferem a data econômica retornada. A suíte continua com 28 métodos.
 
-Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após a correção da comparação. As evidências PCRE2 acima pertencem à validação da expressão regular; não executam a semântica de comparação ABAP. A classe e seus testes devem ser reativados e a suíte de 28 métodos reexecutada no ADT. Nenhuma gravação de taxas foi necessária para o diagnóstico, e a correção atual ainda não foi executada no SAP.
+Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após a correção da comparação. As evidências PCRE2 acima pertencem à validação da expressão regular; não executam a semântica de comparação ABAP. Depois da entrega da correção no commit `50e7eee`, o responsável confirmou ATC e ABAP Unit sem erros. Nenhuma gravação de taxas foi necessária para o diagnóstico.
 
 ## Verificações pendentes no SAP
 
-1. Importar os objetos para `ZEXED_FI_TAXA_CAMBIO` / `ZCUSTOM_DEVELOPMENT`, executar syntax check e ativar todas as dependências no ADT.
-2. Executar ATC e os 28 métodos de ABAP Unit da versão corrigida; resolver eventuais incompatibilidades com o release de destino.
-3. Publicar/configurar o cenário de comunicação e testar HTTPS com o BACEN a partir do tenant, conforme [comunicacao.md](comunicacao.md).
+1. Completar a autorização de acesso: Business Catalog com `ZEXED_PTAX_JOB_SAJC`, publicação local, Business Role com esse catálogo e atribuição ao usuário. Conferir acesso ao app Application Jobs e disponibilidade de `ZEXED_PTAX_DAILY`, conforme [autorizacoes.md](autorizacoes.md).
+2. Preservar os resultados de ATC/ABAP Unit da versão validada para rastreabilidade. Reexecutar após alterações executáveis; esta atualização de documentação não altera os fontes ABAP.
+3. Conferir publicação e arrangement do cenário já criado e testar HTTPS com o BACEN a partir do tenant, conforme [comunicacao.md](comunicacao.md).
 4. Confirmar o calendário legado `BR`, seu mapeamento FHC, cobertura de datas, fatores de conversão e regras do fuso configurado. `BRAZIL` é o valor inicial do parâmetro; sua existência e correspondência ao fuso de Brasília precisam ser conferidas no tenant.
 5. Executar simulação com boletins conhecidos e conferir data, sete pares, orientação D/I, precisão, fatores e Application Log. Validar ausência de uma moeda sem impedir as demais e sem recuar a data.
 6. Em DEV, provar criação, igualdade, atualização e reexecução pela BOI. Validar autorizações, locks, concorrência, erro em um par com preservação dos demais, mensagem de falha do job e reconciliação após resultado de commit incerto.
 7. Após aceite operacional, configurar execução diária às 07:00 de Brasília, com datas vazias e simulação desmarcada. Coordenar a desativação do RPA para evitar manutenção concorrente.
 
-Na preparação inicial, não foram executados ativação SAP, ATC, ABAP Unit, gravação real de taxas, comunicação HTTPS do tenant ou agendamento produtivo. Posteriormente, o responsável informou a ativação e enviou os resultados de ABAP Unit registrados acima. A execução da correção e as demais verificações operacionais continuam pendentes. O template distribuído inicia em simulação.
+Na preparação inicial, o assistente não executou ativação SAP, ATC, ABAP Unit, gravação real de taxas, comunicação HTTPS do tenant ou agendamento produtivo. Posteriormente, o responsável informou a ativação, compartilhou os erros anteriores e confirmou ATC/ABAP Unit sem erros após as correções. Essa confirmação encerra a pendência dos testes relatados; acesso ao job e validações operacionais acima continuam pendentes. O template distribuído inicia em simulação.
 
 ## Governança
 
-A correção de idioma solicitada após o primeiro pull alinha `MASTER_LANGUAGE` e `LANGU` para `P`, e `originalLanguage` para `pt`. Descrições dos objetos, rótulos do catálogo e comentários foram traduzidos; os identificadores técnicos, a versão de linguagem ABAP Cloud e a lógica executável foram preservados. O erro relatado no ADT indicava login `PT` versus idioma principal `EN`. A repetição do pull no ADT ainda precisa confirmar a importação da correção.
+A correção de idioma solicitada após o primeiro pull alinha `MASTER_LANGUAGE` e `LANGU` para `P`, e `originalLanguage` para `pt`. Descrições dos objetos, rótulos do catálogo e comentários foram traduzidos; os identificadores técnicos, a versão de linguagem ABAP Cloud e a lógica executável foram preservados. O erro relatado no ADT indicava login `PT` versus idioma principal `EN`. Posteriormente, o responsável confirmou a ativação dos objetos e a execução dos testes.
 
 Os códigos foram conferidos na [tabela oficial SAP AFF de idiomas](https://github.com/SAP/abap-file-formats/blob/main/docs/languages.md) e na [documentação do idioma principal abapGit](https://docs.abapgit.org/user-guide/repo-settings/dot-abapgit.html). A correção passou novamente pela análise XML/JSON, schemas AFF e parser abaplint. A comparação com a versão anterior confirmou que os arquivos ABAP mudaram somente em comentários.
 

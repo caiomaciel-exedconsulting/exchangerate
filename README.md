@@ -2,7 +2,7 @@
 
 Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fechamento diário do BACEN e mantém taxas do tipo **M**, sempre pela **cotação de compra**, usando a BOI released `I_CurrencyExchangeRateTP_2`.
 
-**Entrega de fontes para pull pelo ADT.** O responsável ativou os objetos e enviou os resultados dos testes. A última execução apontou três erros na comparação da data BACEN, posteriores à validação do formato. Esta versão remove a comparação incorreta do separador e reforça o teste de data divergente; a nova execução no SAP está pendente. O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [validações e pendências](docs/validacao.md).
+**Entrega de fontes para pull pelo ADT.** O responsável confirmou ATC e ABAP Unit sem erros e a criação dos sistemas e do cenário de comunicação. Falta completar a autorização de acesso ao job: IAM App → Business Catalog → Business Role → usuário, conforme o [guia de autorizações](docs/autorizacoes.md). O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [validações e pendências](docs/validacao.md).
 
 ## Comportamento
 
@@ -30,11 +30,12 @@ Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fec
 1. Fazer pull pelo abapGit no ADT para o pacote `ZEXED_FI_TAXA_CAMBIO`, no componente `ZCUSTOM_DEVELOPMENT`. Confirmar o vínculo do pacote e a compatibilidade dos tipos de objeto no release.
 2. Ativar tipos/interfaces e exceção, classes, objeto de log, serviço/cenário de comunicação, catálogo e template conforme suas dependências. Conferir todos os erros de ativação antes de executar.
 3. Configurar o acesso BACEN conforme [comunicacao.md](docs/comunicacao.md): cenário `ZEXED_PTAX_COMM`, serviço `ZEXED_PTAX_REST`, HTTPS anônimo e host `olinda.bcb.gov.br`.
-4. Confirmar o calendário legado `BR`, seu mapeamento FHC/cobertura, os fatores M e o identificador do fuso de Brasília. O valor inicial `BRAZIL` deve ser conferido no tenant.
-5. Executar os testes ABAP Unit e ATC no ADT. Executar primeiro o template `ZEXED_PTAX_DAILY` em simulação, conferir os sete resultados e abrir o Application Log.
-6. Validar a manutenção e a reexecução em DEV. Só depois configurar a recorrência às 07:00, com simulação desmarcada e datas de referência/cotação vazias. Configurar o fuso também na tela de agendamento.
+4. **Configurar as autorizações antes de acessar o job.** No ADT, criar/publicar um Business Catalog contendo a IAM App `ZEXED_PTAX_JOB_SAJC`. No Fiori, atribuir esse catálogo a uma Business Role e atribuir a role ao usuário. Conferir também o acesso ao app Application Jobs. Seguir [autorizacoes.md](docs/autorizacoes.md).
+5. Confirmar o calendário legado `BR`, seu mapeamento FHC/cobertura, os fatores M e o identificador do fuso de Brasília. O valor inicial `BRAZIL` deve ser conferido no tenant.
+6. Executar os testes ABAP Unit e ATC no ADT após importar alterações executáveis. Com as autorizações configuradas, executar primeiro o template `ZEXED_PTAX_DAILY` em simulação, conferir os sete resultados e abrir o Application Log.
+7. Validar a manutenção e a reexecução em DEV. Só depois configurar a recorrência às 07:00, com simulação desmarcada e datas de referência/cotação vazias. Configurar o fuso também na tela de agendamento.
 
-O pull não cria Communication System/Arrangement nem agenda o job. A substituição operacional do RPA deve ocorrer depois do aceite, evitando dois escritores sobre as mesmas chaves.
+O pull não cria Communication System/Arrangement, Business Role ou sua atribuição ao usuário, nem agenda o job. Esta entrega também não contém o Business Catalog IAM e sua atribuição de app: a criação no ADT está descrita no guia de autorizações. O catálogo de job `ZEXED_PTAX_JOB` (SAJC) não substitui o Business Catalog IAM. A substituição operacional do RPA deve ocorrer depois do aceite, evitando dois escritores sobre as mesmas chaves.
 
 O idioma principal do repositório e dos objetos é **português**: `P` nos metadados SAP XML e `pt` nos arquivos AFF. Usar login **PT** no ADT. A versão inicial estava em inglês; para o erro `Current login language 'PT' does not match main language 'EN'`, atualizar a referência remota da branch `main` e repetir o pull com a versão corrigida. O pull não converte o idioma original de objetos que já tenham sido criados em inglês; esse caso exige verificar o estado dos objetos antes de qualquer recriação.
 

@@ -2,6 +2,8 @@
 
 Os fontes incluem o serviço outbound `ZEXED_PTAX_REST` (SCO3), o cenário `ZEXED_PTAX_COMM` (SCO1), o log `ZEXED_PTAX` (APLO), o catálogo `ZEXED_PTAX_JOB` (SAJC) e o template `ZEXED_PTAX_DAILY` (SAJT). Sistema e arrangement de comunicação são configuração de cada ambiente; não são criados pelo pull.
 
+O responsável informou a criação dos sistemas e do cenário de comunicação. Esse relato não confirma, por si só, o arrangement ou a conectividade HTTPS a partir do tenant; conferir as etapas aplicáveis abaixo. O acesso do usuário ao job exige ainda a configuração de [IAM App, Business Catalog e Business Role](autorizacoes.md).
+
 ## Importação e publicação
 
 Importar no pacote `ZEXED_FI_TAXA_CAMBIO`, componente `ZCUSTOM_DEVELOPMENT`. A configuração `.abapgit.xml` usa somente `/src/`, sem criar uma hierarquia adicional de pacotes.
@@ -38,7 +40,9 @@ Os parâmetros do catálogo correspondem aos atributos públicos da classe:
 | `P_SIMULATE` | `X` | Simulação: consultar e comparar sem criar/alterar taxas ou drafts |
 | `P_COMSYS` | vazio | ID do sistema de comunicação, quando necessário para resolver o arrangement |
 
-O template não cria recorrência. Primeiro executar em simulação, conferir os sete pares e os logs, validar autorização e realizar os testes de escrita em DEV. Depois configurar a execução diária às **07:00 de Brasília**, inclusive fins de semana, com `P_REFERENCE` e `P_QUOTATION` vazios e simulação desmarcada. Conferir também o fuso do agendamento: alterar somente `P_TIMEZONE` não muda o fuso escolhido na tela de agendamento. O calendário controla a data consultada, não a periodicidade.
+O catálogo SAJC e o template não concedem acesso ao usuário. Antes da simulação, incluir `ZEXED_PTAX_JOB_SAJC` em um Business Catalog publicado, atribuir o catálogo a uma Business Role e a role ao usuário, conforme [autorizacoes.md](autorizacoes.md).
+
+O template não cria recorrência. Primeiro executar em simulação, conferir os sete pares e os logs e realizar os testes de escrita em DEV com o usuário de execução previsto. Depois configurar a execução diária às **07:00 de Brasília**, inclusive fins de semana, com `P_REFERENCE` e `P_QUOTATION` vazios e simulação desmarcada. Conferir também o fuso do agendamento: alterar somente `P_TIMEZONE` não muda o fuso escolhido na tela de agendamento. O calendário controla a data consultada, não a periodicidade.
 
 ## Formatos e validação
 
