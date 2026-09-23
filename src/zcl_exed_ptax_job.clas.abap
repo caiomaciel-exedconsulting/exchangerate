@@ -16,6 +16,7 @@ CLASS zcl_exed_ptax_job DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING cx_bali_runtime.
 ENDCLASS.
 
+
 CLASS zcl_exed_ptax_job IMPLEMENTATION.
   METHOD add_text.
     DATA(lv_remaining) = iv_text.
@@ -119,7 +120,7 @@ CLASS zcl_exed_ptax_job IMPLEMENTATION.
           ENDTRY.
         ENDIF.
         RAISE EXCEPTION NEW cx_apj_rt_content(
-          previous = NEW zcx_exed_ptax( detail = lv_error previous = lx_failure ) ).
+          previous = NEW zcx_exed_ptax( detail = conv #( lv_error ) previous = lx_failure ) ).
     ENDTRY.
     IF lv_errors > 0.
       RAISE EXCEPTION NEW cx_apj_rt_content(

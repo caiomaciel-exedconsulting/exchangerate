@@ -11,7 +11,11 @@
   "parameters": {
     "singleValueParameters": [
       {
-        "name": "P_REFERENCE",
+        "name": "P_CALENDAR",
+        "value": "BR"
+      },
+      {
+        "name": "P_COMSYS",
         "value": ""
       },
       {
@@ -19,20 +23,16 @@
         "value": ""
       },
       {
-        "name": "P_CALENDAR",
-        "value": "BR"
-      },
-      {
-        "name": "P_TIMEZONE",
-        "value": "BRAZIL"
+        "name": "P_REFERENCE",
+        "value": ""
       },
       {
         "name": "P_SIMULATE",
         "value": "X"
       },
       {
-        "name": "P_COMSYS",
-        "value": ""
+        "name": "P_TIMEZONE",
+        "value": "BRAZIL"
       }
     ]
   }

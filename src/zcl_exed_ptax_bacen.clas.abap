@@ -114,7 +114,7 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
           lv_close_error = close_client( lo_client ).
           CLEAR lo_client.
           IF lv_close_error IS NOT INITIAL.
-            RAISE EXCEPTION NEW zcx_exed_ptax( detail = lv_close_error ).
+            RAISE EXCEPTION NEW zcx_exed_ptax( detail = conv #( lv_close_error ) ).
           ENDIF.
           rs_quote = parse_response( iv_json = lv_body iv_currency = iv_currency iv_date = iv_date ).
           RETURN.
@@ -167,7 +167,7 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
     me->if_xco_json_tree_visitor~on_start( ).
     rs_quote = VALUE #( currency = iv_currency quotation_date = iv_date found = abap_false ).
     IF iv_json IS INITIAL OR strlen( iv_json ) > 32768.
-      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN JSON body is empty or exceeds 32768 characters' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN JSON body is empty or exceeds 32768' ).
     ENDIF.
     TRY.
         DATA(lo_json) = xco_cp_json=>data->from_string( iv_json ).
@@ -183,12 +183,12 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
       RETURN.
     ENDIF.
     IF lines( mt_bulletins ) <> 1.
-      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN returned multiple closing bulletins for one currency/date' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'multiple closing bulletins for one currency/date' ).
     ENDIF.
     DATA(ls_bulletin) = mt_bulletins[ 1 ].
     DATA(lv_expected_date) = |{ iv_date+0(4) }-{ iv_date+4(2) }-{ iv_date+6(2) }|.
     IF ls_bulletin-buy_rate <= 0 OR ls_bulletin-bulletin_type <> 'Fechamento PTAX'.
-      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN closing bulletin or positive purchase rate is invalid' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'bulletin or positive purchase rate is invalid' ).
     ENDIF.
     IF NOT matches( val = ls_bulletin-timestamp
       pcre = `^[0-9]{4}-[0-9]{2}-[0-9]{2} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,7})?$` ).

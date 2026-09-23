@@ -29,35 +29,28 @@
   "parameters": [
     {
       "name": "P_REFERENCE",
-      "title": "Data de referência (vazio: data atual no fuso informado)",
       "group": "DATES"
     },
     {
       "name": "P_QUOTATION",
-      "title": "Data da cotação (vazio: dia útil anterior)",
       "group": "DATES"
     },
     {
       "name": "P_CALENDAR",
-      "title": "ID legado do calendário de fábrica",
       "group": "DATES",
       "mandatory": true
     },
     {
       "name": "P_TIMEZONE",
-      "title": "Fuso horário SAP de Brasília",
       "group": "DATES",
       "mandatory": true
     },
     {
       "name": "P_SIMULATE",
-      "title": "Simulação: sem alterar taxas ou rascunhos",
-      "group": "EXECUTION",
-      "screenElement": "checkbox"
+      "group": "EXECUTION"
     },
     {
       "name": "P_COMSYS",
-      "title": "ID do sistema de comunicação (opcional se único)",
       "group": "EXECUTION"
     }
   ]

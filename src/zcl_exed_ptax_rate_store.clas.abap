@@ -8,48 +8,47 @@ CLASS zcl_exed_ptax_rate_store DEFINITION PUBLIC FINAL CREATE PUBLIC.
         target_units TYPE decfloat34,
       END OF ty_factors,
       BEGIN OF ty_current,
-        found TYPE abap_bool,
+        found       TYPE abap_bool,
         signed_rate TYPE zif_exed_ptax_types=>ty_rate,
       END OF ty_current.
     TYPES ty_failed TYPE RESPONSE FOR FAILED EARLY i_currencyexchangeratetp_2.
     TYPES ty_reported TYPE RESPONSE FOR REPORTED EARLY i_currencyexchangeratetp_2.
     TYPES tt_keys TYPE TABLE FOR READ IMPORT i_currencyexchangeratetp_2.
     CLASS-METHODS normalize
-      IMPORTING iv_buy_rate TYPE decfloat34
-                iv_quotation TYPE zif_exed_ptax_types=>ty_quotation
-                is_factors TYPE ty_factors
+      IMPORTING iv_buy_rate    TYPE decfloat34
+                iv_quotation   TYPE zif_exed_ptax_types=>ty_quotation
+                is_factors     TYPE ty_factors
       RETURNING VALUE(rv_rate) TYPE zif_exed_ptax_types=>ty_rate
-      RAISING zcx_exed_ptax.
+      RAISING   zcx_exed_ptax.
     CLASS-METHODS signed_rate
-      IMPORTING iv_absolute TYPE zif_exed_ptax_types=>ty_rate
-                iv_quotation TYPE zif_exed_ptax_types=>ty_quotation
+      IMPORTING iv_absolute    TYPE zif_exed_ptax_types=>ty_rate
+                iv_quotation   TYPE zif_exed_ptax_types=>ty_quotation
       RETURNING VALUE(rv_rate) TYPE zif_exed_ptax_types=>ty_rate
-      RAISING zcx_exed_ptax.
+      RAISING   zcx_exed_ptax.
     METHODS read_factors
       IMPORTING is_pair TYPE zif_exed_ptax_types=>ty_pair iv_date TYPE d
       RETURNING VALUE(rs_factors) TYPE ty_factors
       RAISING zcx_exed_ptax.
     METHODS read_current
-      IMPORTING is_item TYPE zif_exed_ptax_types=>ty_item
+      IMPORTING is_item           TYPE zif_exed_ptax_types=>ty_item
       RETURNING VALUE(rs_current) TYPE ty_current.
     METHODS revalidate
       IMPORTING is_item TYPE zif_exed_ptax_types=>ty_item
-      RAISING zcx_exed_ptax.
+      RAISING   zcx_exed_ptax.
     METHODS check_response
       IMPORTING is_failed TYPE ty_failed is_reported TYPE ty_reported
                 iv_step TYPE string
       RAISING zcx_exed_ptax.
     METHODS stage_one
       IMPORTING is_item TYPE zif_exed_ptax_types=>ty_item
-      RAISING zcx_exed_ptax.
+      RAISING   zcx_exed_ptax.
 ENDCLASS.
 
 CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
   METHOD normalize.
     IF iv_buy_rate <= 0 OR is_factors-source_units <= 0
        OR is_factors-target_units <= 0.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = 'Cotacao e fatores de conversao devem ser positivos.' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Cotacao e fatore devem ser positivos.' ).
     ENDIF.
     TRY.
         DATA lv_value TYPE decfloat34.
@@ -64,13 +63,11 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
         "O campo liberado da BOI define a precisão e o arredondamento do valor.
         rv_rate = CONV #( lv_value ).
       CATCH cx_sy_arithmetic_error cx_sy_conversion_error INTO DATA(lx_numeric).
-        RAISE EXCEPTION NEW zcx_exed_ptax(
-          detail = 'Cotacao excede a representacao do campo de cambio SAP.'
-          previous = lx_numeric ).
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail   = 'Cotacao excede a representacao do campo SAP.'
+                                           previous = lx_numeric ).
     ENDTRY.
     IF rv_rate <= 0.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = 'Cotacao ficou zero apos arredondamento na precisao SAP.' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Cotacao ficou zero apos arredondamento.' ).
     ENDIF.
   ENDMETHOD.
 
@@ -103,13 +100,11 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
       INTO TABLE @DATA(lt_factors)
       UP TO 1 ROWS.
     IF lt_factors IS INITIAL.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = |Sem fatores M { lv_source }/{ lv_target } validos em { iv_date DATE = ISO }.| ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Sem fatores M { lv_source }/{ lv_target } validos em { iv_date DATE = ISO }.| ).
     ENDIF.
     DATA(ls_factor) = lt_factors[ 1 ].
     IF ls_factor-AlternativeExchangeRateType IS NOT INITIAL.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = |Tipo alternativo { ls_factor-AlternativeExchangeRateType } configurado para M { lv_source }/{ lv_target }; revisar configuracao.| ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Tipo alternativo { ls_factor-AlternativeExchangeRateType } configurado para M { lv_source }/{ lv_target }; revisar configuracao.| ).
     ENDIF.
     IF is_pair-quotation = 'I'.
       rs_factors-source_units = ls_factor-NumberOfTargetCurrencyUnits.
@@ -119,8 +114,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
       rs_factors-target_units = ls_factor-NumberOfTargetCurrencyUnits.
     ENDIF.
     IF rs_factors-source_units <= 0 OR rs_factors-target_units <= 0.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = |Fatores invalidos para M { lv_source }/{ lv_target }.| ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Fatores invalidos para M { lv_source }/{ lv_target }.| ).
     ENDIF.
   ENDMETHOD.
 
@@ -195,16 +189,14 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
        OR ls_factors-target_units <> is_item-target_units
        OR normalize( iv_buy_rate = is_item-buy_rate iv_quotation = is_item-quotation
                      is_factors = ls_factors ) <> is_item-absolute_rate.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = 'Fatores ou cotacao mudaram desde a inspecao; reprocessar.' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Fatores ou cotacao mudaram desde a inspecao;' ).
     ENDIF.
     DATA(ls_current) = read_current( is_item ).
     IF ( is_item-action = zif_exed_ptax_types=>action_create AND ls_current-found = abap_true )
        OR ( ( is_item-action = zif_exed_ptax_types=>action_update
               OR is_item-action = zif_exed_ptax_types=>action_unchanged )
             AND ( ls_current-found = abap_false OR ls_current-signed_rate <> is_item-old_signed_rate ) ).
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = |Cambio M { is_item-source_currency }/{ is_item-target_currency } alterado concorrentemente; reprocessar.| ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Cambio M { is_item-source_currency }/{ is_item-target_currency } alterado concorrentemente; reprocessar.| ).
     ENDIF.
   ENDMETHOD.
 
@@ -263,7 +255,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
           %key-SourceCurrency = is_item-source_currency
           %key-TargetCurrency = is_item-target_currency
           %key-ExchangeRateEffectiveDate = is_item-effective_date
-          %is_draft = if_abap_behv=>mk-off %param-preserve_changes = abap_true ) )
+          %param-preserve_changes = abap_true ) )
         FAILED ls_failed REPORTED ls_reported.
       check_response( is_failed = ls_failed is_reported = ls_reported iv_step = 'Edit' ).
       lt_keys = VALUE #( ( ExchangeRateType = zif_exed_ptax_types=>exchange_rate_type
@@ -299,8 +291,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
        OR ls_draft-NumberOfTargetCurrencyUnits <> is_item-target_units
        OR ls_draft-AbsoluteExchangeRate <> is_item-absolute_rate
        OR ls_draft-ExchangeRateQuotation <> is_item-quotation.
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = 'Fatores, notacao ou valor derivados pelo BOI divergem da inspecao.' ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Fatores, notacao ou valor derivados divergem' ).
     ENDIF.
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate EXECUTE Prepare FROM CORRESPONDING #( lt_keys )
@@ -316,7 +307,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate EXECUTE Activate
       FROM VALUE #( FOR ls_activate_key IN lt_keys
-        ( %cid = 'ACTIVATE_PTAX' %tky = ls_activate_key-%tky ) )
+        ( %cid = 'ACTIVATE_PTAX' %key = ls_activate_key-%key ) )
       FAILED ls_failed REPORTED ls_reported.
     check_response( is_failed = ls_failed is_reported = ls_reported iv_step = 'Activate' ).
   ENDMETHOD.
@@ -357,14 +348,12 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
             is_reported = CORRESPONDING #( DEEP ls_late_reported )
             iv_step = 'COMMIT ENTITIES' ).
           IF lv_commit_subrc <> 0.
-            RAISE EXCEPTION NEW zcx_exed_ptax(
-              detail = |COMMIT ENTITIES retornou { lv_commit_subrc }.| ).
+            RAISE EXCEPTION NEW zcx_exed_ptax( detail = |COMMIT ENTITIES retornou { lv_commit_subrc }.| ).
           ENDIF.
           DATA(ls_saved) = read_current( <ls_item> ).
           IF ls_saved-found = abap_false OR ls_saved-signed_rate <> signed_rate(
               iv_absolute = <ls_item>-absolute_rate iv_quotation = <ls_item>-quotation ).
-            RAISE EXCEPTION NEW zcx_exed_ptax(
-              detail = 'Leitura apos COMMIT nao confirmou a taxa esperada.' ).
+            RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Leitura apos COMMIT nao confirmou a taxa esperada.' ).
           ENDIF.
           <ls_item>-message = 'Gravacao confirmada por leitura apos COMMIT do par.'.
         CATCH cx_root INTO DATA(lx_pair).
