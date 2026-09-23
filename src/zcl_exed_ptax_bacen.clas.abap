@@ -61,8 +61,8 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
     IF lv_checked_date IS INITIAL.
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN quotation date is required' ).
     ENDIF.
-    " Only allowlisted currency and validated numeric date enter this fixed query.
-    " Two records suffice to detect unexpected duplicate closing bulletins.
+    " Esta consulta fixa recebe somente moeda permitida e data numérica validada.
+    " Dois registros bastam para detectar boletins de fechamento duplicados.
     rv_query = |@moeda='{ iv_currency }'&@dataCotacao='{ iv_date+4(2) }-{ iv_date+6(2) }-{ iv_date+0(4) }'|
       && |&$filter=tipoBoletim%20eq%20'Fechamento%20PTAX'&$format=json&$top=2|
       && |&$select=cotacaoCompra,cotacaoVenda,dataHoraCotacao,tipoBoletim|.
@@ -99,8 +99,8 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
           IF ls_status-code <> 200.
             lv_close_error = close_client( lo_client ).
             CLEAR lo_client.
-            " Never bypass a server Retry-After, and never WAIT (implicit commit).
-            " A job retry/reprocessing is required for 429/503 or Retry-After.
+            " Respeitar Retry-After do servidor e não usar WAIT, que faz commit implícito.
+            " Respostas 429/503 ou Retry-After exigem reprocessamento posterior do job.
             IF lv_attempt < max_attempts AND lv_retry_after IS INITIAL
                AND lv_close_error IS INITIAL
                AND ( ls_status-code = 502 OR ls_status-code = 504 ).
@@ -163,7 +163,7 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD parse_response.
-    " Reset even if a parser rejects/ignores input before visitor on_start.
+    " Limpar o estado mesmo se o parser rejeitar a entrada antes de on_start.
     me->if_xco_json_tree_visitor~on_start( ).
     rs_quote = VALUE #( currency = iv_currency quotation_date = iv_date found = abap_false ).
     IF iv_json IS INITIAL OR strlen( iv_json ) > 32768.

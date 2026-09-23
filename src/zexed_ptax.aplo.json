@@ -1,14 +1,14 @@
 {
   "formatVersion": "1",
   "header": {
-    "description": "BACEN PTAX exchange rate import",
-    "originalLanguage": "en",
+    "description": "Importação de taxas de câmbio PTAX do BACEN",
+    "originalLanguage": "pt",
     "abapLanguageVersion": "cloudDevelopment"
   },
   "subobjects": [
     {
       "name": "IMPORT",
-      "description": "PTAX consultation and exchange rate maintenance"
+      "description": "Consulta PTAX e manutenção de taxas de câmbio"
     }
   ]
 }

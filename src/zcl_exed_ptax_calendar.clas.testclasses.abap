@@ -71,13 +71,13 @@ CLASS ltc_calendar IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD previous_day_corrected_back.
-    " Monday after Good Friday/weekend: stub supplies the calendar's Thursday.
+    " Segunda após a Sexta-feira Santa: o calendário simulado retorna quinta.
     DATA(lv_date) = mo_cut->calculate_before( iv_reference_date = '20240401' io_runtime = mo_runtime ).
     cl_abap_unit_assert=>assert_equals( act = mo_runtime->requested_date exp = '20240331' ).
     cl_abap_unit_assert=>assert_equals( act = mo_runtime->requested_option
       exp = if_fhc_fcal_runtime=>gc_correct_option_minus ).
     cl_abap_unit_assert=>assert_equals( act = lv_date exp = '20240328' ).
-    " Sunday still starts from Saturday, retaining strict reference-date exclusion.
+    " No domingo, a busca parte de sábado e exclui a própria data de referência.
     lv_date = mo_cut->calculate_before( iv_reference_date = '20240331' io_runtime = mo_runtime ).
     cl_abap_unit_assert=>assert_equals( act = mo_runtime->requested_date exp = '20240330' ).
   ENDMETHOD.

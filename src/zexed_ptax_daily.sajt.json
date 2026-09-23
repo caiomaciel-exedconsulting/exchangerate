@@ -1,8 +1,8 @@
 {
   "formatVersion": "1",
   "header": {
-    "description": "BACEN PTAX import - initial simulation defaults",
-    "originalLanguage": "en",
+    "description": "Importação PTAX do BACEN - simulação inicial",
+    "originalLanguage": "pt",
     "abapLanguageVersion": "cloudDevelopment"
   },
   "generalInformation": {

@@ -24,7 +24,7 @@ CLASS ltc_rate_store IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD indirect_nonunit_factors.
-    "Indirect notation preserves the BACEN value; it does not take its reciprocal.
+    "A cotação indireta preserva o valor BACEN, sem calcular seu inverso.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_exed_ptax_rate_store=>normalize(
         iv_buy_rate = '5.1234' iv_quotation = 'I'

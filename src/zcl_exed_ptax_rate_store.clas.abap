@@ -61,7 +61,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
           WHEN OTHERS.
             RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Notacao deve ser D ou I.' ).
         ENDCASE.
-        "The released BO field defines precision and rounding for comparison/save.
+        "O campo liberado da BOI define a precisão e o arredondamento do valor.
         rv_rate = CONV #( lv_value ).
       CATCH cx_sy_arithmetic_error cx_sy_conversion_error INTO DATA(lx_numeric).
         RAISE EXCEPTION NEW zcx_exed_ptax(
@@ -87,7 +87,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     DATA(lv_source) = is_pair-source_currency.
     DATA(lv_target) = is_pair-target_currency.
     IF is_pair-quotation = 'I'.
-      "The BO resolves indirect factors using the opposite currency pair.
+      "A BOI resolve fatores indiretos usando o par de moedas inverso.
       lv_source = is_pair-target_currency.
       lv_target = is_pair-source_currency.
     ELSEIF is_pair-quotation <> 'D'.
@@ -233,7 +233,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD stage_one.
-    "One pair is staged without committing. The caller owns the SAP LUW.
+    "Preparar um par sem commit; o chamador controla a LUW SAP.
     revalidate( is_item ).
     DATA lt_keys TYPE tt_keys.
     IF is_item-action = zif_exed_ptax_types=>action_create.
@@ -276,7 +276,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     LOOP AT lt_keys ASSIGNING FIELD-SYMBOL(<ls_key>).
       <ls_key>-%is_draft = if_abap_behv=>mk-on.
     ENDLOOP.
-    "Keep the technical identity returned by RAP, including the late-numbering PID.
+    "Preservar a identidade técnica retornada pelo RAP, incluindo o PID tardio.
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate UPDATE FIELDS ( ExchangeRateQuotation AbsoluteExchangeRate )
       WITH VALUE #( FOR ls_key IN lt_keys ( %tky = ls_key-%tky
@@ -305,13 +305,13 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate EXECUTE Prepare FROM CORRESPONDING #( lt_keys )
       FAILED ls_failed REPORTED ls_reported.
-    "State messages are obtained by READ after draft validation.
+    "Obter mensagens de estado por READ após validar o rascunho.
     READ ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate ALL FIELDS WITH lt_keys
       RESULT DATA(lt_prepared) FAILED DATA(ls_read_failed) REPORTED DATA(ls_read_reported).
     check_response( is_failed = ls_read_failed is_reported = ls_read_reported iv_step = 'Prepare state' ).
     check_response( is_failed = ls_failed is_reported = ls_reported iv_step = 'Prepare' ).
-    "Prepare obtains the business lock; compare the persisted snapshot again under it.
+    "Prepare bloqueia o registro; comparar novamente o estado persistido sob bloqueio.
     revalidate( is_item ).
     MODIFY ENTITIES OF I_CurrencyExchangeRateTP_2
       ENTITY ExchangeRate EXECUTE Activate
@@ -322,8 +322,8 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_exed_ptax_rate_store~apply.
-    "Approved transaction boundary: one pair per LUW, preserving previous successes.
-    "This adapter must be called by the dedicated job, outside a RAP handler.
+    "Limite aprovado: um par por LUW, preservando os pares já concluídos.
+    "Este adaptador deve ser chamado pelo job dedicado, fora de um handler RAP.
     rt_items = it_items.
     DATA lt_seen TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
     LOOP AT rt_items ASSIGNING FIELD-SYMBOL(<ls_item>).
@@ -374,7 +374,7 @@ CLASS zcl_exed_ptax_rate_store IMPLEMENTATION.
           ELSE.
             <ls_item>-message = lx_pair->get_text( ).
           ENDIF.
-          "Resets the current buffer; it cannot undo a previously completed commit.
+          "Limpar o buffer atual; isso não desfaz um commit já concluído.
           ROLLBACK ENTITIES.
           IF lv_commit_attempted = abap_true.
             TRY.

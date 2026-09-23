@@ -66,7 +66,7 @@ CLASS ltc_bacen IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD no_bulletin_is_not_error.
-    " A previous parse must not leak its state into the following response.
+    " Uma leitura anterior não deve deixar estado na próxima resposta.
     map_purchase_quote( ).
     DATA(ls_quote) = mo_cut->parse_response( iv_currency = 'USD' iv_date = '20240329'
       iv_json = `{"@odata.context":"fixture","value":[]}` ).

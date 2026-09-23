@@ -65,7 +65,7 @@ CLASS zcl_exed_ptax_service IMPLEMENTATION.
       INSERT ls_pair-bacen_currency INTO TABLE lt_currencies.
     ENDLOOP.
 
-    " Complete HTTP work before any SAP maintenance is attempted.
+    " Concluir as consultas HTTP antes de iniciar a manutenção no SAP.
     LOOP AT lt_currencies INTO DATA(lv_currency).
       DATA(ls_quote) = mo_source->get_quote(
         iv_currency = lv_currency iv_date = rs_result-quotation_date ).

@@ -48,4 +48,8 @@ Não foram executados nesta entrega: ativação SAP, ATC, ABAP Unit, gravação 
 
 ## Governança
 
+A correção de idioma solicitada após o primeiro pull alinha `MASTER_LANGUAGE` e `LANGU` para `P`, e `originalLanguage` para `pt`. Descrições dos objetos, rótulos do catálogo e comentários foram traduzidos; os identificadores técnicos, a versão de linguagem ABAP Cloud e a lógica executável foram preservados. O erro relatado no ADT indicava login `PT` versus idioma principal `EN`. A repetição do pull no ADT ainda precisa confirmar a importação da correção.
+
+Os códigos foram conferidos na [tabela oficial SAP AFF de idiomas](https://github.com/SAP/abap-file-formats/blob/main/docs/languages.md) e na [documentação do idioma principal abapGit](https://docs.abapgit.org/user-guide/repo-settings/dot-abapgit.html). A correção passou novamente pela análise XML/JSON, schemas AFF e parser abaplint. A comparação com a versão anterior confirmou que os arquivos ABAP mudaram somente em comentários.
+
 Especificação, plano, upload ao GitHub e ajuste de gravação por par foram aprovados pelo responsável. A dispensa do Harness formal SDD foi autorizada explicitamente para esta entrega de fontes, mantendo as verificações disponíveis e as pendências documentadas. Não há declaração de certificação formal SDD. Consulte [decisoes.md](decisoes.md).

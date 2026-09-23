@@ -36,6 +36,8 @@ Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fec
 
 O pull não cria Communication System/Arrangement nem agenda o job. A substituição operacional do RPA deve ocorrer depois do aceite, evitando dois escritores sobre as mesmas chaves.
 
+O idioma principal do repositório e dos objetos é **português**: `P` nos metadados SAP XML e `pt` nos arquivos AFF. Usar login **PT** no ADT. A versão inicial estava em inglês; para o erro `Current login language 'PT' does not match main language 'EN'`, atualizar a referência remota da branch `main` e repetir o pull com a versão corrigida. O pull não converte o idioma original de objetos que já tenham sido criados em inglês; esse caso exige verificar o estado dos objetos antes de qualquer recriação.
+
 Para reprocessar, informar `P_QUOTATION` com a data econômica desejada. Essa data é usada exatamente, sem fallback. Se vazia, o job calcula o dia útil anterior a `P_REFERENCE`; referência vazia usa a data corrente no fuso configurado.
 
 ## Objetos e implementação

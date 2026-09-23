@@ -1,8 +1,8 @@
 {
   "formatVersion": "1",
   "header": {
-    "description": "BACEN PTAX exchange rate import",
-    "originalLanguage": "en",
+    "description": "Importação de taxas de câmbio PTAX do BACEN",
+    "originalLanguage": "pt",
     "abapLanguageVersion": "cloudDevelopment"
   },
   "generalInformation": {
@@ -17,47 +17,47 @@
   "groups": [
     {
       "name": "DATES",
-      "title": "Quotation date",
+      "title": "Data da cotação",
       "section": "PTAX"
     },
     {
       "name": "EXECUTION",
-      "title": "Execution",
+      "title": "Execução",
       "section": "PTAX"
     }
   ],
   "parameters": [
     {
       "name": "P_REFERENCE",
-      "title": "Reference date (blank: current date in business time zone)",
+      "title": "Data de referência (vazio: data atual no fuso informado)",
       "group": "DATES"
     },
     {
       "name": "P_QUOTATION",
-      "title": "Explicit quotation date (blank: previous working day)",
+      "title": "Data da cotação (vazio: dia útil anterior)",
       "group": "DATES"
     },
     {
       "name": "P_CALENDAR",
-      "title": "Factory calendar legacy ID",
+      "title": "ID legado do calendário de fábrica",
       "group": "DATES",
       "mandatory": true
     },
     {
       "name": "P_TIMEZONE",
-      "title": "SAP business time zone (Brasilia)",
+      "title": "Fuso horário SAP de Brasília",
       "group": "DATES",
       "mandatory": true
     },
     {
       "name": "P_SIMULATE",
-      "title": "Simulation: no exchange rate or draft changes",
+      "title": "Simulação: sem alterar taxas ou rascunhos",
       "group": "EXECUTION",
       "screenElement": "checkbox"
     },
     {
       "name": "P_COMSYS",
-      "title": "Communication system ID (optional when unambiguous)",
+      "title": "ID do sistema de comunicação (opcional se único)",
       "group": "EXECUTION"
     }
   ]
