@@ -1,7 +1,7 @@
 INTERFACE zif_exed_ptax_calendar PUBLIC.
   METHODS previous_workday
-    IMPORTING iv_reference_date TYPE d
-              iv_calendar_id TYPE zif_exed_ptax_types=>ty_calendar_id
-    RETURNING VALUE(rv_date) TYPE d
+    IMPORTING reference_date TYPE d
+              calendar_id TYPE zif_exed_ptax_types=>factory_calendar_code
+    RETURNING VALUE(workday) TYPE d
     RAISING zcx_exed_ptax.
 ENDINTERFACE.

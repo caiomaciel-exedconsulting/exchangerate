@@ -5,6 +5,10 @@
     "errorNamespace": "^(Z|Y|LCL_|LTCL_|TY_|LIF_)"
   },
   "rules": {
-    "parser_error": true
+    "parser_error": true,
+    "no_prefixes": {
+      "types": "^(TY|TT)_",
+      "maxIssuesPerFile": 100
+    }
   }
 }

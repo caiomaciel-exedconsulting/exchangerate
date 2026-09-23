@@ -1,12 +1,12 @@
 INTERFACE zif_exed_ptax_rate_store PUBLIC.
   METHODS inspect
-    IMPORTING iv_date TYPE d
-              it_pairs TYPE zif_exed_ptax_types=>tt_pairs
-              it_quotes TYPE zif_exed_ptax_types=>tt_quotes
-    RETURNING VALUE(rt_items) TYPE zif_exed_ptax_types=>tt_items
+    IMPORTING requested_date TYPE d
+              currency_pairs TYPE zif_exed_ptax_types=>currency_pairs
+              quotes TYPE zif_exed_ptax_types=>ptax_quotes
+    RETURNING VALUE(result_items) TYPE zif_exed_ptax_types=>rate_items
     RAISING zcx_exed_ptax.
   METHODS apply
-    IMPORTING it_items TYPE zif_exed_ptax_types=>tt_items
-    RETURNING VALUE(rt_items) TYPE zif_exed_ptax_types=>tt_items
+    IMPORTING items TYPE zif_exed_ptax_types=>rate_items
+    RETURNING VALUE(result_items) TYPE zif_exed_ptax_types=>rate_items
     RAISING zcx_exed_ptax.
 ENDINTERFACE.

@@ -52,6 +52,8 @@ As leituras de API State confirmaram os contratos principais no DEV conectado. I
 
 ## Verificações locais
 
-`npx @abaplint/cli@2.120.58` executa o parser ABAP Cloud com o `abaplint.json` incluído. A configuração publicada verifica parsing; a verificação semântica completa depende dos objetos standard do release. Na preparação também foi executada uma checagem estática local com declarações de dependências, descrita no relatório, sem equivalência a syntax check/ATC do ADT.
+`npx @abaplint/cli@2.120.58` executa o parser ABAP Cloud e a regra `no_prefixes` com o `abaplint.json` incluído. A configuração publicada verifica parsing e nomenclatura; a verificação semântica completa depende dos objetos standard do release. Na preparação também foi executada uma checagem estática local com declarações de dependências, descrita no relatório, sem equivalência a syntax check/ATC do ADT.
+
+Variáveis, atributos, parâmetros próprios, tipos e classes locais usam nomes sem notação húngara. Nomes herdados de APIs SAP e identificadores globais dos objetos são preservados. Os parâmetros públicos `P_*` permanecem como contrato do catálogo/template e de agendamentos. A refatoração partiu das correções ativadas e publicadas pelo responsável no commit `2c1413a`; detalhes em [nomenclatura.md](docs/nomenclatura.md).
 
 Os schemas AFF v1 da SAP foram usados para validar APLO/SAJC/SAJT; os XML foram analisados e as referências cruzadas conferidas. Nenhuma chave, credencial ou cópia de implementação standard SAP faz parte desta entrega.

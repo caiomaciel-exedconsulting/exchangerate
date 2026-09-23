@@ -9,9 +9,9 @@ CLASS zcl_exed_ptax_job DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA p_comsys TYPE c LENGTH 60.
   PRIVATE SECTION.
     METHODS add_text
-      IMPORTING io_log TYPE REF TO if_bali_log
-                iv_text TYPE string
-                iv_severity TYPE if_bali_constants=>ty_severity
+      IMPORTING log TYPE REF TO if_bali_log
+                text TYPE string
+                severity TYPE if_bali_constants=>ty_severity
                   DEFAULT if_bali_constants=>c_severity_information
       RAISING cx_bali_runtime.
 ENDCLASS.
@@ -19,113 +19,113 @@ ENDCLASS.
 
 CLASS zcl_exed_ptax_job IMPLEMENTATION.
   METHOD add_text.
-    DATA(lv_remaining) = iv_text.
-    WHILE lv_remaining IS NOT INITIAL.
-      DATA(lv_length) = nmin( val1 = strlen( lv_remaining ) val2 = 200 ).
-      io_log->add_item( cl_bali_free_text_setter=>create(
-        severity = iv_severity text = CONV #( substring( val = lv_remaining len = lv_length ) ) ) ).
-      lv_remaining = substring( val = lv_remaining off = lv_length ).
+    DATA(remaining_text) = text.
+    WHILE remaining_text IS NOT INITIAL.
+      DATA(segment_length) = nmin( val1 = strlen( remaining_text ) val2 = 200 ).
+      log->add_item( cl_bali_free_text_setter=>create(
+        severity = severity text = CONV #( substring( val = remaining_text len = segment_length ) ) ) ).
+      remaining_text = substring( val = remaining_text off = segment_length ).
     ENDWHILE.
   ENDMETHOD.
 
   METHOD if_apj_rt_run~execute.
-    DATA lo_log TYPE REF TO if_bali_log.
-    DATA lv_finished TYPE abap_bool.
-    DATA lv_errors TYPE i.
+    DATA log TYPE REF TO if_bali_log.
+    DATA finished TYPE abap_bool.
+    DATA error_count TYPE i.
     TRY.
-        lo_log = cl_bali_log=>create_with_header(
+        log = cl_bali_log=>create_with_header(
           cl_bali_header_setter=>create( object = 'ZEXED_PTAX' subobject = 'IMPORT' ) ).
-        DATA(lv_reference) = p_reference.
-        IF lv_reference IS INITIAL.
-          DATA lv_now TYPE timestamp.
-          GET TIME STAMP FIELD lv_now.
+        DATA(reference_date) = p_reference.
+        IF reference_date IS INITIAL.
+          DATA current_timestamp TYPE timestamp.
+          GET TIME STAMP FIELD current_timestamp.
           IF p_timezone IS INITIAL.
             RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Informe o fuso SAP de Brasilia.' ).
           ENDIF.
-          CONVERT TIME STAMP lv_now TIME ZONE p_timezone INTO DATE lv_reference.
+          CONVERT TIME STAMP current_timestamp TIME ZONE p_timezone INTO DATE reference_date.
           IF sy-subrc <> 0.
             RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Fuso SAP invalido: { p_timezone }.| ).
           ENDIF.
         ENDIF.
-        add_text( io_log = lo_log
-          iv_text = |PTAX M/compra: referencia { lv_reference DATE = ISO }; calendario { p_calendar }; fuso { p_timezone }; simulacao { p_simulate }.| ).
-        DATA(lo_service) = NEW zcl_exed_ptax_service(
-          io_source = NEW zcl_exed_ptax_bacen( iv_comm_system = CONV #( p_comsys ) )
-          io_calendar = NEW zcl_exed_ptax_calendar( )
-          io_store = NEW zcl_exed_ptax_rate_store( ) ).
-        DATA(ls_result) = lo_service->run(
-          iv_reference_date = lv_reference iv_quotation_date = p_quotation
-          iv_calendar_id = p_calendar iv_simulate = p_simulate ).
-        lv_finished = abap_true.
+        add_text( log = log
+          text = |PTAX M/compra: referencia { reference_date DATE = ISO }; calendario { p_calendar }; fuso { p_timezone }; simulacao { p_simulate }.| ).
+        DATA(service) = NEW zcl_exed_ptax_service(
+          source = NEW zcl_exed_ptax_bacen( communication_system = CONV #( p_comsys ) )
+          calendar = NEW zcl_exed_ptax_calendar( )
+          store = NEW zcl_exed_ptax_rate_store( ) ).
+        DATA(result) = service->run(
+          reference_date = reference_date quotation_date = p_quotation
+          calendar_id = p_calendar simulate = p_simulate ).
+        finished = abap_true.
 
-        DATA lv_created TYPE i.
-        DATA lv_updated TYPE i.
-        DATA lv_equal TYPE i.
-        DATA lv_skipped TYPE i.
-        DATA lv_missing_currencies TYPE i.
-        LOOP AT ls_result-quotes INTO DATA(ls_quote).
-          IF ls_quote-found = abap_false.
-            lv_missing_currencies += 1.
-            add_text( io_log = lo_log iv_severity = if_bali_constants=>c_severity_warning
-              iv_text = |{ ls_quote-currency }: sem Fechamento PTAX em { ls_result-quotation_date DATE = ISO }; nenhuma outra data consultada.| ).
+        DATA created_count TYPE i.
+        DATA updated_count TYPE i.
+        DATA equal_count TYPE i.
+        DATA skipped_count TYPE i.
+        DATA missing_currency_count TYPE i.
+        LOOP AT result-quotes INTO DATA(quote).
+          IF quote-found = abap_false.
+            missing_currency_count += 1.
+            add_text( log = log severity = if_bali_constants=>c_severity_warning
+              text = |{ quote-currency }: sem Fechamento PTAX em { result-quotation_date DATE = ISO }; nenhuma outra data consultada.| ).
           ELSE.
-            add_text( io_log = lo_log iv_text =
-              |{ ls_quote-currency }: compra { ls_quote-buy_rate }; boletim { ls_quote-bulletin_timestamp }.| ).
+            add_text( log = log text =
+              |{ quote-currency }: compra { quote-buy_rate }; boletim { quote-bulletin_timestamp }.| ).
           ENDIF.
         ENDLOOP.
-        LOOP AT ls_result-items INTO DATA(ls_item).
-          CASE ls_item-action.
-            WHEN zif_exed_ptax_types=>action_create. lv_created += 1.
-            WHEN zif_exed_ptax_types=>action_update. lv_updated += 1.
-            WHEN zif_exed_ptax_types=>action_unchanged. lv_equal += 1.
-            WHEN zif_exed_ptax_types=>action_no_bulletin. lv_skipped += 1.
-            WHEN zif_exed_ptax_types=>action_error. lv_errors += 1.
+        LOOP AT result-items INTO DATA(item).
+          CASE item-action.
+            WHEN zif_exed_ptax_types=>action_create. created_count += 1.
+            WHEN zif_exed_ptax_types=>action_update. updated_count += 1.
+            WHEN zif_exed_ptax_types=>action_unchanged. equal_count += 1.
+            WHEN zif_exed_ptax_types=>action_no_bulletin. skipped_count += 1.
+            WHEN zif_exed_ptax_types=>action_error. error_count += 1.
           ENDCASE.
-          add_text( io_log = lo_log
-            iv_severity = COND #( WHEN ls_item-action = zif_exed_ptax_types=>action_error
+          add_text( log = log
+            severity = COND #( WHEN item-action = zif_exed_ptax_types=>action_error
                                   THEN if_bali_constants=>c_severity_error
                                   ELSE if_bali_constants=>c_severity_information )
-            iv_text =
-            |{ ls_item-source_currency }/{ ls_item-target_currency } { ls_item-quotation } { ls_item-action }: { ls_item-absolute_rate }; fatores { ls_item-source_units }/{ ls_item-target_units }; { ls_item-message }| ).
+            text =
+            |{ item-source_currency }/{ item-target_currency } { item-quotation } { item-action }: { item-absolute_rate }; fatores { item-source_units }/{ item-target_units }; { item-message }| ).
         ENDLOOP.
-        DATA(lv_mode) = COND string( WHEN p_simulate = abap_true THEN 'SIMULACAO - acoes previstas'
+        DATA(execution_mode) = COND string( WHEN p_simulate = abap_true THEN 'SIMULACAO - acoes previstas'
                                    ELSE 'MANUTENCAO - resultado confirmado' ).
-        add_text( io_log = lo_log
-          iv_severity = COND #( WHEN lv_errors > 0 THEN if_bali_constants=>c_severity_error
+        add_text( log = log
+          severity = COND #( WHEN error_count > 0 THEN if_bali_constants=>c_severity_error
                                 ELSE if_bali_constants=>c_severity_status )
-          iv_text = |{ lv_mode }: criar={ lv_created }; atualizar={ lv_updated }; iguais={ lv_equal }; sem boletim={ lv_skipped } pares/{ lv_missing_currencies } moedas; erros={ lv_errors }.| ).
+          text = |{ execution_mode }: criar={ created_count }; atualizar={ updated_count }; iguais={ equal_count }; sem boletim={ skipped_count } pares/{ missing_currency_count } moedas; erros={ error_count }.| ).
         cl_bali_log_db=>get_instance( )->save_log_2nd_db_connection(
-          log = lo_log assign_to_current_appl_job = abap_true ).
-      CATCH cx_root INTO DATA(lx_failure).
-        DATA lv_error TYPE string.
-        DATA(lo_cause) = lx_failure.
+          log = log assign_to_current_appl_job = abap_true ).
+      CATCH cx_root INTO DATA(failure).
+        DATA error_text TYPE string.
+        DATA(cause) = failure.
         DO 8 TIMES.
-          IF lo_cause IS NOT BOUND.
+          IF cause IS NOT BOUND.
             EXIT.
           ENDIF.
-          lv_error = |{ lv_error } { lo_cause->get_text( ) }|.
-          lo_cause = lo_cause->previous.
+          error_text = |{ error_text } { cause->get_text( ) }|.
+          cause = cause->previous.
         ENDDO.
-        IF lv_finished = abap_true AND p_simulate = abap_false.
-          lv_error = |Processamento encerrado; falha posterior no log. Pode haver pares gravados; reconciliar antes de repetir. { lv_error }|.
+        IF finished = abap_true AND p_simulate = abap_false.
+          error_text = |Processamento encerrado; falha posterior no log. Pode haver pares gravados; reconciliar antes de repetir. { error_text }|.
         ENDIF.
-        IF lo_log IS BOUND.
+        IF log IS BOUND.
           TRY.
-              add_text( io_log = lo_log iv_text = lv_error
-                iv_severity = if_bali_constants=>c_severity_error ).
+              add_text( log = log text = error_text
+                severity = if_bali_constants=>c_severity_error ).
               cl_bali_log_db=>get_instance( )->save_log_2nd_db_connection(
-                log = lo_log assign_to_current_appl_job = abap_true ).
-            CATCH cx_bali_runtime INTO DATA(lx_log).
-              lv_error = |{ lv_error } Falha adicional ao salvar log: { lx_log->get_text( ) }|.
+                log = log assign_to_current_appl_job = abap_true ).
+            CATCH cx_bali_runtime INTO DATA(log_error).
+              error_text = |{ error_text } Falha adicional ao salvar log: { log_error->get_text( ) }|.
           ENDTRY.
         ENDIF.
         RAISE EXCEPTION NEW cx_apj_rt_content(
-          previous = NEW zcx_exed_ptax( detail = conv #( lv_error ) previous = lx_failure ) ).
+          previous = NEW zcx_exed_ptax( detail = conv #( error_text ) previous = failure ) ).
     ENDTRY.
-    IF lv_errors > 0.
+    IF error_count > 0.
       RAISE EXCEPTION NEW cx_apj_rt_content(
         previous = NEW zcx_exed_ptax(
-          detail = |{ lv_errors } par(es) com erro. Sucessos preservados; consultar Application Log e reprocessar a mesma data.| ) ).
+          detail = |{ error_count } par(es) com erro. Sucessos preservados; consultar Application Log e reprocessar a mesma data.| ) ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.

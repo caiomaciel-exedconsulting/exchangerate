@@ -1,7 +1,7 @@
-CLASS ltc_rate_store DEFINITION DEFERRED.
-CLASS zcl_exed_ptax_rate_store DEFINITION LOCAL FRIENDS ltc_rate_store.
+CLASS rate_store_tests DEFINITION DEFERRED.
+CLASS zcl_exed_ptax_rate_store DEFINITION LOCAL FRIENDS rate_store_tests.
 
-CLASS ltc_rate_store DEFINITION FINAL FOR TESTING
+CLASS rate_store_tests DEFINITION FINAL FOR TESTING
   DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS direct_nonunit_factors FOR TESTING RAISING zcx_exed_ptax.
@@ -14,44 +14,44 @@ CLASS ltc_rate_store DEFINITION FINAL FOR TESTING
     METHODS invalid_notation FOR TESTING.
 ENDCLASS.
 
-CLASS ltc_rate_store IMPLEMENTATION.
+CLASS rate_store_tests IMPLEMENTATION.
   METHOD direct_nonunit_factors.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_exed_ptax_rate_store=>normalize(
-        iv_buy_rate = '5.1234' iv_quotation = 'D'
-        is_factors = VALUE #( source_units = 100 target_units = 1 ) )
-      exp = CONV zif_exed_ptax_types=>ty_rate( '512.34' ) ).
+        buy_rate = '5.1234' quotation = 'D'
+        factors = VALUE #( source_units = 100 target_units = 1 ) )
+      exp = CONV zif_exed_ptax_types=>exchange_rate( '512.34' ) ).
   ENDMETHOD.
 
   METHOD indirect_nonunit_factors.
     "A cotação indireta preserva o valor BACEN, sem calcular seu inverso.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_exed_ptax_rate_store=>normalize(
-        iv_buy_rate = '5.1234' iv_quotation = 'I'
-        is_factors = VALUE #( source_units = 1 target_units = 100 ) )
-      exp = CONV zif_exed_ptax_types=>ty_rate( '512.34' ) ).
+        buy_rate = '5.1234' quotation = 'I'
+        factors = VALUE #( source_units = 1 target_units = 100 ) )
+      exp = CONV zif_exed_ptax_types=>exchange_rate( '512.34' ) ).
   ENDMETHOD.
 
   METHOD sap_precision.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_exed_ptax_rate_store=>normalize(
-        iv_buy_rate = '5.123456' iv_quotation = 'D'
-        is_factors = VALUE #( source_units = 1 target_units = 1 ) )
-      exp = CONV zif_exed_ptax_types=>ty_rate( '5.12346' ) ).
+        buy_rate = '5.123456' quotation = 'D'
+        factors = VALUE #( source_units = 1 target_units = 1 ) )
+      exp = CONV zif_exed_ptax_types=>exchange_rate( '5.12346' ) ).
   ENDMETHOD.
 
   METHOD indirect_signed_comparison.
     cl_abap_unit_assert=>assert_equals(
       act = zcl_exed_ptax_rate_store=>signed_rate(
-        iv_absolute = CONV #( '5.1234' ) iv_quotation = 'I' )
-      exp = CONV zif_exed_ptax_types=>ty_rate( '-5.1234' ) ).
+        absolute_rate = CONV #( '5.1234' ) quotation = 'I' )
+      exp = CONV zif_exed_ptax_types=>exchange_rate( '-5.1234' ) ).
   ENDMETHOD.
 
   METHOD invalid_factor.
     TRY.
-        DATA(lv_rate) = zcl_exed_ptax_rate_store=>normalize(
-          iv_buy_rate = 5 iv_quotation = 'D'
-          is_factors = VALUE #( source_units = 1 target_units = 0 ) ).
+        DATA(rate) = zcl_exed_ptax_rate_store=>normalize(
+          buy_rate = 5 quotation = 'D'
+          factors = VALUE #( source_units = 1 target_units = 0 ) ).
         cl_abap_unit_assert=>fail( 'Zero factor must fail.' ).
       CATCH zcx_exed_ptax.
     ENDTRY.
@@ -59,9 +59,9 @@ CLASS ltc_rate_store IMPLEMENTATION.
 
   METHOD zero_after_rounding.
     TRY.
-        DATA(lv_rate) = zcl_exed_ptax_rate_store=>normalize(
-          iv_buy_rate = '0.00000001' iv_quotation = 'D'
-          is_factors = VALUE #( source_units = 1 target_units = 1 ) ).
+        DATA(rate) = zcl_exed_ptax_rate_store=>normalize(
+          buy_rate = '0.00000001' quotation = 'D'
+          factors = VALUE #( source_units = 1 target_units = 1 ) ).
         cl_abap_unit_assert=>fail( 'Unrepresentable positive rate must fail.' ).
       CATCH zcx_exed_ptax.
     ENDTRY.
@@ -69,9 +69,9 @@ CLASS ltc_rate_store IMPLEMENTATION.
 
   METHOD overflow.
     TRY.
-        DATA(lv_rate) = zcl_exed_ptax_rate_store=>normalize(
-          iv_buy_rate = '1E30' iv_quotation = 'D'
-          is_factors = VALUE #( source_units = 100 target_units = 1 ) ).
+        DATA(rate) = zcl_exed_ptax_rate_store=>normalize(
+          buy_rate = '1E30' quotation = 'D'
+          factors = VALUE #( source_units = 100 target_units = 1 ) ).
         cl_abap_unit_assert=>fail( 'Overflow must fail.' ).
       CATCH zcx_exed_ptax.
     ENDTRY.
@@ -79,9 +79,9 @@ CLASS ltc_rate_store IMPLEMENTATION.
 
   METHOD invalid_notation.
     TRY.
-        DATA(lv_rate) = zcl_exed_ptax_rate_store=>normalize(
-          iv_buy_rate = 5 iv_quotation = 'X'
-          is_factors = VALUE #( source_units = 1 target_units = 1 ) ).
+        DATA(rate) = zcl_exed_ptax_rate_store=>normalize(
+          buy_rate = 5 quotation = 'X'
+          factors = VALUE #( source_units = 1 target_units = 1 ) ).
         cl_abap_unit_assert=>fail( 'Invalid quotation must fail.' ).
       CATCH zcx_exed_ptax.
     ENDTRY.
