@@ -2,7 +2,7 @@
 
 Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fechamento diário do BACEN e mantém taxas do tipo **M**, sempre pela **cotação de compra**, usando a BOI released `I_CurrencyExchangeRateTP_2`.
 
-**Entrega de fontes para pull pelo ADT.** O responsável ativou os objetos e enviou uma execução de ABAP Unit com 24 sucessos e dois erros na validação da data/hora BACEN. Esta versão corrige essa validação e inclui testes adicionais; a nova execução no SAP está pendente. O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [validações e pendências](docs/validacao.md).
+**Entrega de fontes para pull pelo ADT.** O responsável ativou os objetos e enviou os resultados dos testes. A última execução apontou três erros na comparação da data BACEN, posteriores à validação do formato. Esta versão remove a comparação incorreta do separador e reforça o teste de data divergente; a nova execução no SAP está pendente. O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [validações e pendências](docs/validacao.md).
 
 ## Comportamento
 

@@ -13,7 +13,9 @@ CLASS bacen_tests DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLES
     METHODS no_bulletin_is_not_error FOR TESTING RAISING zcx_exed_ptax.
     METHODS reject_bad_json_contract FOR TESTING.
     METHODS reject_wrong_quote FOR TESTING.
-    METHODS expect_rejected IMPORTING json_text TYPE string.
+    METHODS expect_rejected
+      IMPORTING json_text TYPE string
+                expected_detail TYPE msgv1 OPTIONAL.
 ENDCLASS.
 
 CLASS bacen_tests IMPLEMENTATION.
@@ -93,6 +95,8 @@ CLASS bacen_tests IMPLEMENTATION.
       cl_abap_unit_assert=>assert_equals(
         act = quote-bulletin_timestamp exp = bulletin_timestamp ).
       cl_abap_unit_assert=>assert_equals(
+        act = quote-quotation_date exp = CONV d( '20240328' ) ).
+      cl_abap_unit_assert=>assert_equals(
         act = quote-buy_rate exp = CONV decfloat34( '5.39520' ) ).
     ENDLOOP.
   ENDMETHOD.
@@ -138,8 +142,14 @@ CLASS bacen_tests IMPLEMENTATION.
       && `"tipoBoletim":"Fechamento PTAX"}]}` ).
     expect_rejected( `{"value":[{"cotacaoCompra":-1,"dataHoraCotacao":"2024-03-28 14:40:02",`
       && `"tipoBoletim":"Fechamento PTAX"}]}` ).
-    expect_rejected( `{"value":[{"cotacaoCompra":4.99,"dataHoraCotacao":"2024-03-27 14:40:02",`
-      && `"tipoBoletim":"Fechamento PTAX"}]}` ).
+    expect_rejected(
+      json_text = `{"value":[{"cotacaoCompra":4.99,"dataHoraCotacao":"2024-03-27 14:40:02",`
+        && `"tipoBoletim":"Fechamento PTAX"}]}`
+      expected_detail = 'BACEN returned a different quotation date' ).
+    expect_rejected(
+      json_text = `{"value":[{"cotacaoCompra":4.99,"dataHoraCotacao":"2024-03-29 14:40:02",`
+        && `"tipoBoletim":"Fechamento PTAX"}]}`
+      expected_detail = 'BACEN returned a different quotation date' ).
     expect_rejected( `{"value":[{"cotacaoCompra":4.99,"dataHoraCotacao":"2024-03-28 14:40:02",`
       && `"tipoBoletim":"Fechamento"}]}` ).
     expect_rejected( `{"value":[{"cotacaoCompra":4.99,"dataHoraCotacao":"2024-03-28 14:40:02",`
@@ -153,6 +163,10 @@ CLASS bacen_tests IMPLEMENTATION.
         cl_abap_unit_assert=>fail( 'Invalid response must not be interpreted as absence/success' ).
       CATCH zcx_exed_ptax INTO DATA(expected_error).
         cl_abap_unit_assert=>assert_not_initial( expected_error->detail ).
+        IF expected_detail IS NOT INITIAL.
+          cl_abap_unit_assert=>assert_equals(
+            act = expected_error->detail exp = expected_detail ).
+        ENDIF.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.

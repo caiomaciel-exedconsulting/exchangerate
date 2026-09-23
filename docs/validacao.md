@@ -6,7 +6,7 @@ Esta entrega contém 15 objetos ABAP Cloud, com gravação independente por par 
 
 | Verificação | Resultado |
 |---|---|
-| abaplint 2.120.58, parser ABAP Cloud, configuração publicada | 0 issues; 29 arquivos de objetos analisados |
+| abaplint 2.120.58, parser ABAP Cloud e nomenclatura, configuração publicada | 0 issues; 31 arquivos de objetos analisados |
 | abaplint local, incluindo check_syntax e declarações de dependências | 0 issues; não substitui o compilador SAP |
 | APLO, SAJC e SAJT | Válidos nos schemas AFF v1 oficiais da SAP, com Ajv draft 2020 |
 | XML de metadados, comunicação e abapGit | 13 arquivos analisados sem erro de XML |
@@ -24,11 +24,11 @@ Leituras somente de consulta confirmaram API State C1 e contratos dos principais
 
 | Classe | Métodos de teste escritos | Execução no SAP |
 |---|---:|---|
-| ZCL_EXED_PTAX_BACEN | 8 | Base anterior: 4 sucessos e 2 erros; correção e 2 testes novos aguardam execução |
+| ZCL_EXED_PTAX_BACEN | 8 | Última execução enviada: três erros na comparação da data; nova correção aguarda execução |
 | ZCL_EXED_PTAX_CALENDAR | 5 | 5 sucessos na execução enviada pelo responsável |
 | ZCL_EXED_PTAX_RATE_STORE | 8 | 8 sucessos na execução enviada pelo responsável |
 | ZCL_EXED_PTAX_SERVICE | 7 | 7 sucessos na execução enviada pelo responsável |
-| Total | 28 | Base anterior: 24 sucessos em 26 testes; nova execução pendente |
+| Total | 28 | Primeira execução: 24 sucessos em 26 testes. Após ampliar a suíte, foram relatados três erros; nova execução pendente |
 
 Os testes acompanham os fontes em arquivos `.clas.testclasses.abap`. A existência e a análise estática desses arquivos não são resultados de ABAP Unit. Casos de integração com persistência, locks e save sequence exigem validação no tenant.
 
@@ -36,13 +36,19 @@ A revisão dos fontes também corrigiu a categoria da classe de exceção, a pre
 
 ## Correção dos erros de data/hora BACEN
 
+A correção atual parte do commit `fa1f431`, que inclui a última alteração do calendário feita pelo responsável. Essa alteração foi preservada.
+
 As imagens enviadas pelo responsável mostram dois erros: `MAP_PURCHASE_QUOTE` e `NO_BULLETIN_IS_NOT_ERROR`. Ambos passam pela mesma chamada, pois o segundo teste começa carregando uma cotação válida para verificar a limpeza do estado na resposta seguinte. O método ativo foi consultado no SAP; a linha 31 de `PARSE_RESPONSE`, indicada na pilha, corresponde à rejeição do formato de data/hora.
 
 A expressão regular tinha um espaço literal entre data e hora. Nas funções ABAP com PCRE, o modo estendido ignora esse espaço no padrão. O separador foi substituído por `\x20`, que exige exatamente um espaço, sem ampliar os formatos aceitos. Referência: [SAP — sintaxe PCRE e modo estendido](https://help.sap.com/doc/abapdocu_816_index_htm/8.16/en-US/ABENREGEX_PCRE_SYNTAX.html).
 
 Dois métodos de regressão foram acrescentados: aceitação de segundos sem fração ou com 1, 3 e 7 casas; rejeição de separador ausente, `T`, espaço duplicado, tabulação, hora/minuto/segundo inválidos e fração vazia ou excessiva. A verificação local com PCRE2 10.48 e modo estendido confirmou os 13 casos; o padrão anterior rejeitava os quatro exemplos válidos. Essa execução valida o padrão, não equivale a ABAP Unit nem à execução do leitor JSON no SAP.
 
-Parser, `no_prefixes` e checagem estática local passaram sem ocorrências. A correção foi feita nos fontes; a classe e seus testes devem ser reativados e a suíte de 28 métodos reexecutada no ADT. Nenhuma gravação de taxas foi necessária para o diagnóstico.
+Depois desse ajuste, o responsável enviou três erros em `MAP_PURCHASE_QUOTE`, `NO_BULLETIN_IS_NOT_ERROR` e `ACCEPT_TIMESTAMP_PRECISION`. A linha 36 de `PARSE_RESPONSE`, confirmada pela consulta ao fonte ativo, é a comparação posterior ao formato. O operando `bulletin-timestamp+10(1)` é `STRING`, mas o literal `' '` é `CHAR`: a conversão implícita remove o espaço do literal, fazendo um espaço válido parecer diferente de texto vazio. Referência: [SAP — comparação de dados de caracteres](https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/abenlogexp_character.htm).
+
+A comparação redundante do separador foi removida; o padrão `\x20` continua exigindo exatamente um espaço. A comparação dos dez primeiros caracteres com a data solicitada permanece intacta. O teste de data divergente agora verifica a mensagem específica da exceção para datas anterior e posterior, evitando um falso sucesso causado por rejeição indevida do formato. Os casos positivos também conferem a data econômica retornada. A suíte continua com 28 métodos.
+
+Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após a correção da comparação. As evidências PCRE2 acima pertencem à validação da expressão regular; não executam a semântica de comparação ABAP. A classe e seus testes devem ser reativados e a suíte de 28 métodos reexecutada no ADT. Nenhuma gravação de taxas foi necessária para o diagnóstico, e a correção atual ainda não foi executada no SAP.
 
 ## Verificações pendentes no SAP
 

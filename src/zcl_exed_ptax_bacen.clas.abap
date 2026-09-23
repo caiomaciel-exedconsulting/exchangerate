@@ -195,8 +195,8 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
       pcre = `^[0-9]{4}-[0-9]{2}-[0-9]{2}\x20([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,7})?$` ).
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN quotation timestamp is invalid' ).
     ENDIF.
-    IF bulletin-timestamp+0(10) <> expected_date
-       OR bulletin-timestamp+10(1) <> ' '.
+    " O separador já foi validado pela regex; comparar somente a data econômica.
+    IF bulletin-timestamp+0(10) <> expected_date.
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN returned a different quotation date' ).
     ENDIF.
     quote-found = abap_true.
