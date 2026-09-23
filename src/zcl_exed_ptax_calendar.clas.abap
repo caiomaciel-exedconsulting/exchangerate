@@ -3,10 +3,10 @@ CLASS zcl_exed_ptax_calendar DEFINITION PUBLIC FINAL CREATE PUBLIC.
     INTERFACES zif_exed_ptax_calendar.
   PRIVATE SECTION.
     METHODS calculate_before
-      IMPORTING reference_date TYPE d
+      IMPORTING reference_date   TYPE d
                 factory_calendar TYPE REF TO if_fhc_fcal_runtime
-      RETURNING VALUE(workday) TYPE d
-      RAISING zcx_exed_ptax.
+      RETURNING VALUE(workday)   TYPE d
+      RAISING   zcx_exed_ptax.
 ENDCLASS.
 
 CLASS zcl_exed_ptax_calendar IMPLEMENTATION.
@@ -17,19 +17,17 @@ CLASS zcl_exed_ptax_calendar IMPLEMENTATION.
     TRY.
         DATA(calendar_mapper) = cl_fhc_calendar_id_mapper=>create_id_mapper( ).
         DATA(factory_calendar_id) = calendar_mapper->mapping_fcal_legacyid_to_id(
-          iv_legacy_id = CONV #( calendar_id ) ).
+          iv_legacy_id = calendar_id ).
         IF factory_calendar_id IS INITIAL.
-          RAISE EXCEPTION NEW zcx_exed_ptax(
-            detail = |Factory calendar { calendar_id } has no FHC mapping| ).
+          RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Factory calendar { calendar_id } has no FHC mapping| ).
         ENDIF.
         DATA(factory_calendar) = cl_fhc_calendar_runtime=>create_factorycalendar_runtime(
           iv_factorycalendar_id = factory_calendar_id ).
         workday = calculate_before( reference_date = reference_date
                                     factory_calendar = factory_calendar ).
       CATCH cx_fhc_runtime INTO DATA(calendar_error).
-        RAISE EXCEPTION NEW zcx_exed_ptax(
-          detail = |Factory calendar { calendar_id } cannot be resolved|
-          previous = calendar_error ).
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail   = |Factory calendar { calendar_id } cannot be resolved|
+                                           previous = calendar_error ).
     ENDTRY.
   ENDMETHOD.
 
@@ -49,8 +47,7 @@ CLASS zcl_exed_ptax_calendar IMPLEMENTATION.
     DATA(last_possible_date) = CONV d( valid_date - 1 ).
     IF last_possible_date < factory_calendar->get_validity_start( )
        OR last_possible_date > factory_calendar->get_validity_end( ).
-      RAISE EXCEPTION NEW zcx_exed_ptax(
-        detail = |Factory calendar does not cover { last_possible_date DATE = ISO }| ).
+      RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Factory calendar does not cover { last_possible_date DATE = ISO }| ).
     ENDIF.
     TRY.
         DATA(factory_date) = factory_calendar->convert_date_to_factorydate(
@@ -60,13 +57,11 @@ CLASS zcl_exed_ptax_calendar IMPLEMENTATION.
         IF workday IS INITIAL OR workday > last_possible_date
            OR workday < factory_calendar->get_validity_start( )
            OR workday > factory_calendar->get_validity_end( ).
-          RAISE EXCEPTION NEW zcx_exed_ptax(
-            detail = 'Calendar returned an invalid previous working day' ).
+          RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Calendar returned an invalid previous working day' ).
         ENDIF.
       CATCH cx_fhc_runtime INTO DATA(calendar_error).
-        RAISE EXCEPTION NEW zcx_exed_ptax(
-          detail = |Cannot determine working day before { reference_date DATE = ISO }|
-          previous = calendar_error ).
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail   = |Cannot determine working day before { reference_date DATE = ISO }|
+                                           previous = calendar_error ).
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
