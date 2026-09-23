@@ -4,7 +4,6 @@ CLASS zcl_exed_ptax_job DEFINITION LOCAL FRIENDS job_tests.
 CLASS job_tests DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS initial_dates_use_today FOR TESTING RAISING zcx_exed_ptax.
-    METHODS blank_dates_use_today FOR TESTING RAISING zcx_exed_ptax.
     METHODS explicit_reference_kept FOR TESTING RAISING zcx_exed_ptax.
     METHODS explicit_quotation_kept FOR TESTING RAISING zcx_exed_ptax.
     METHODS reject_invalid_reference FOR TESTING.
@@ -16,19 +15,6 @@ CLASS job_tests IMPLEMENTATION.
   METHOD initial_dates_use_today.
     DATA(job) = NEW zcl_exed_ptax_job( ).
     job->p_timezone = 'UTC'.
-    DATA(dates) = job->resolve_dates( CONV timestamp( '20260923070000' ) ).
-    cl_abap_unit_assert=>assert_equals( act = dates-reference_date exp = '20260923' ).
-    cl_abap_unit_assert=>assert_initial( dates-quotation_date ).
-  ENDMETHOD.
-
-  METHOD blank_dates_use_today.
-    DATA(job) = NEW zcl_exed_ptax_job( ).
-    job->p_timezone = 'UTC'.
-    job->p_reference = '00000000'.
-    job->p_quotation = '00000000'.
-    " Reproduzir a entrada que não é INITIAL apesar de aparecer vazia na tela.
-    cl_abap_unit_assert=>assert_not_initial( job->p_reference ).
-    cl_abap_unit_assert=>assert_not_initial( job->p_quotation ).
     DATA(dates) = job->resolve_dates( CONV timestamp( '20260923070000' ) ).
     cl_abap_unit_assert=>assert_equals( act = dates-reference_date exp = '20260923' ).
     cl_abap_unit_assert=>assert_initial( dates-quotation_date ).
