@@ -160,7 +160,7 @@ CLASS zcl_exed_ptax_job IMPLEMENTATION.
               error_text = |{ error_text } Falha adicional ao salvar log: { log_error->get_text( ) }|.
           ENDTRY.
         ENDIF.
-        RAISE EXCEPTION NEW cx_apj_rt_content( previous = NEW zcx_exed_ptax( detail = CONV #( error_text ) previous = failure ) ).
+        RAISE EXCEPTION NEW cx_apj_rt_content( previous = NEW zcx_exed_ptax( detail = error_text previous = failure ) ).
     ENDTRY.
     IF error_count > 0.
       RAISE EXCEPTION NEW cx_apj_rt_content( previous = NEW zcx_exed_ptax(

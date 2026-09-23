@@ -24,8 +24,8 @@ CLASS job_tests IMPLEMENTATION.
   METHOD blank_dates_use_today.
     DATA(job) = NEW zcl_exed_ptax_job( ).
     job->p_timezone = 'UTC'.
-    job->p_reference = '        '.
-    job->p_quotation = '        '.
+    job->p_reference = '00000000'.
+    job->p_quotation = '00000000'.
     " Reproduzir a entrada que não é INITIAL apesar de aparecer vazia na tela.
     cl_abap_unit_assert=>assert_not_initial( job->p_reference ).
     cl_abap_unit_assert=>assert_not_initial( job->p_quotation ).
@@ -37,7 +37,7 @@ CLASS job_tests IMPLEMENTATION.
   METHOD explicit_reference_kept.
     DATA(job) = NEW zcl_exed_ptax_job( ).
     job->p_reference = '20260406'.
-    job->p_quotation = '        '.
+    job->p_quotation = '00000000'.
     DATA(dates) = job->resolve_dates( CONV timestamp( '20260923070000' ) ).
     cl_abap_unit_assert=>assert_equals( act = dates-reference_date exp = '20260406' ).
     cl_abap_unit_assert=>assert_initial( dates-quotation_date ).
