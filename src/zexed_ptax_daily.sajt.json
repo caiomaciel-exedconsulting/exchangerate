@@ -1,7 +1,7 @@
 {
   "formatVersion": "1",
   "header": {
-    "description": "Importação PTAX do BACEN - simulação inicial",
+    "description": "Importação PTAX do BACEN",
     "originalLanguage": "pt",
     "abapLanguageVersion": "cloudDevelopment"
   },
@@ -13,10 +13,6 @@
       {
         "name": "P_CALENDAR",
         "value": "BR"
-      },
-      {
-        "name": "P_COMSYS",
-        "value": ""
       },
       {
         "name": "P_QUOTATION",

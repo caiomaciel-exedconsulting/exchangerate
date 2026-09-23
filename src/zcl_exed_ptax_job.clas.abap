@@ -9,15 +9,16 @@ CLASS zcl_exed_ptax_job DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA p_comsys TYPE c LENGTH 60.
   PRIVATE SECTION.
     METHODS add_text
-      IMPORTING log TYPE REF TO if_bali_log
-                text TYPE string
+      IMPORTING log      TYPE REF TO if_bali_log
+                text     TYPE string
                 severity TYPE if_bali_constants=>ty_severity
                   DEFAULT if_bali_constants=>c_severity_information
-      RAISING cx_bali_runtime.
+      RAISING   cx_bali_runtime.
 ENDCLASS.
 
 
 CLASS zcl_exed_ptax_job IMPLEMENTATION.
+
   METHOD add_text.
     DATA(remaining_text) = text.
     WHILE remaining_text IS NOT INITIAL.
@@ -119,13 +120,11 @@ CLASS zcl_exed_ptax_job IMPLEMENTATION.
               error_text = |{ error_text } Falha adicional ao salvar log: { log_error->get_text( ) }|.
           ENDTRY.
         ENDIF.
-        RAISE EXCEPTION NEW cx_apj_rt_content(
-          previous = NEW zcx_exed_ptax( detail = conv #( error_text ) previous = failure ) ).
+        RAISE EXCEPTION NEW cx_apj_rt_content( previous = NEW zcx_exed_ptax( detail = CONV #( error_text ) previous = failure ) ).
     ENDTRY.
     IF error_count > 0.
-      RAISE EXCEPTION NEW cx_apj_rt_content(
-        previous = NEW zcx_exed_ptax(
-          detail = |{ error_count } par(es) com erro. Sucessos preservados; consultar Application Log e reprocessar a mesma data.| ) ).
+      RAISE EXCEPTION NEW cx_apj_rt_content( previous = NEW zcx_exed_ptax(
+                                               detail = |{ error_count } par(es) com erro. Sucessos preservados; consultar Application Log e reprocessar a mesma data.| ) ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
