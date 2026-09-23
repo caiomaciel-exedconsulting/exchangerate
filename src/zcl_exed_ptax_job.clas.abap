@@ -8,6 +8,14 @@ CLASS zcl_exed_ptax_job DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA p_simulate TYPE abap_bool VALUE abap_true.
     DATA p_comsys TYPE c LENGTH 60.
   PRIVATE SECTION.
+    TYPES BEGIN OF execution_dates.
+    TYPES reference_date TYPE d.
+    TYPES quotation_date TYPE d.
+    TYPES END OF execution_dates.
+    METHODS resolve_dates
+      IMPORTING current_timestamp TYPE timestamp
+      RETURNING VALUE(dates) TYPE execution_dates
+      RAISING zcx_exed_ptax.
     METHODS add_text
       IMPORTING log      TYPE REF TO if_bali_log
                 text     TYPE string
@@ -18,6 +26,43 @@ ENDCLASS.
 
 
 CLASS zcl_exed_ptax_job IMPLEMENTATION.
+
+  METHOD resolve_dates.
+    dates-reference_date = p_reference.
+    dates-quotation_date = p_quotation.
+    " O agendamento pode fornecer oito espaços; INITIAL de D é 00000000.
+    IF dates-reference_date CO space.
+      CLEAR dates-reference_date.
+    ENDIF.
+    IF dates-quotation_date CO space.
+      CLEAR dates-quotation_date.
+    ENDIF.
+    IF dates-reference_date IS INITIAL.
+      IF p_timezone IS INITIAL.
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Informe o fuso SAP de Brasilia.' ).
+      ENDIF.
+      CONVERT TIME STAMP current_timestamp TIME ZONE p_timezone INTO DATE dates-reference_date.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Fuso SAP invalido: { p_timezone }.| ).
+      ENDIF.
+    ENDIF.
+
+    DATA date_timestamp TYPE timestamp.
+    " A cotação explícita tem prioridade; a referência só define a data automática.
+    IF dates-quotation_date IS INITIAL.
+      CONVERT DATE dates-reference_date TIME '000000'
+        INTO TIME STAMP date_timestamp TIME ZONE 'UTC'.
+      IF sy-subrc <> 0 OR dates-reference_date IS INITIAL.
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'P_REFERENCE contem uma data invalida.' ).
+      ENDIF.
+    ELSE.
+      CONVERT DATE dates-quotation_date TIME '000000'
+        INTO TIME STAMP date_timestamp TIME ZONE 'UTC'.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'P_QUOTATION contem uma data invalida.' ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
 
   METHOD add_text.
     DATA(remaining_text) = text.
@@ -36,26 +81,21 @@ CLASS zcl_exed_ptax_job IMPLEMENTATION.
     TRY.
         log = cl_bali_log=>create_with_header(
           cl_bali_header_setter=>create( object = 'ZEXED_PTAX' subobject = 'IMPORT' ) ).
-        DATA(reference_date) = p_reference.
-        IF reference_date IS INITIAL.
-          DATA current_timestamp TYPE timestamp.
-          GET TIME STAMP FIELD current_timestamp.
-          IF p_timezone IS INITIAL.
-            RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'Informe o fuso SAP de Brasilia.' ).
-          ENDIF.
-          CONVERT TIME STAMP current_timestamp TIME ZONE p_timezone INTO DATE reference_date.
-          IF sy-subrc <> 0.
-            RAISE EXCEPTION NEW zcx_exed_ptax( detail = |Fuso SAP invalido: { p_timezone }.| ).
-          ENDIF.
-        ENDIF.
+        DATA current_timestamp TYPE timestamp.
+        GET TIME STAMP FIELD current_timestamp.
+        DATA(dates) = resolve_dates( current_timestamp ).
+        DATA(quotation_text) = COND string( WHEN dates-quotation_date IS INITIAL
+          THEN 'automatica pelo calendario' ELSE |{ dates-quotation_date DATE = ISO }| ).
+        DATA(mode_text) = COND string( WHEN p_simulate = abap_true
+          THEN 'SIMULACAO' ELSE 'MANUTENCAO' ).
         add_text( log = log
-          text = |PTAX M/compra: referencia { reference_date DATE = ISO }; calendario { p_calendar }; fuso { p_timezone }; simulacao { p_simulate }.| ).
+          text = |PTAX M/compra: referencia { dates-reference_date DATE = ISO }; cotacao { quotation_text }; calendario { p_calendar }; fuso { p_timezone }; modo { mode_text }.| ).
         DATA(service) = NEW zcl_exed_ptax_service(
           source = NEW zcl_exed_ptax_bacen( communication_system = CONV #( p_comsys ) )
           calendar = NEW zcl_exed_ptax_calendar( )
           store = NEW zcl_exed_ptax_rate_store( ) ).
         DATA(result) = service->run(
-          reference_date = reference_date quotation_date = p_quotation
+          reference_date = dates-reference_date quotation_date = dates-quotation_date
           calendar_id = p_calendar simulate = p_simulate ).
         finished = abap_true.
 

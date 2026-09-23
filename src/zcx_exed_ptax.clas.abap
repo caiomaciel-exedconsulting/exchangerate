@@ -8,13 +8,15 @@ CLASS zcx_exed_ptax DEFINITION   PUBLIC
     INTERFACES if_t100_message .
     INTERFACES if_t100_dyn_msg .
 
-    DATA detail TYPE msgv1.
+    DATA detail TYPE string.
+
+    METHODS if_message~get_text REDEFINITION.
 
     METHODS constructor
       IMPORTING
         !textid   LIKE if_t100_message=>t100key OPTIONAL
         !previous LIKE previous OPTIONAL
-        !detail   TYPE msgv1 OPTIONAL.
+        !detail   TYPE string OPTIONAL.
   PROTECTED SECTION.
 ENDCLASS.
 
@@ -29,8 +31,14 @@ CLASS zcx_exed_ptax IMPLEMENTATION.
     ELSE.
       if_t100_message~t100key = textid.
     ENDIF.
+    me->detail = detail.
+  ENDMETHOD.
+
+  METHOD if_message~get_text.
     IF detail IS NOT INITIAL.
-      if_t100_message~t100key-attr1 = me->detail = detail.
+      result = detail.
+    ELSE.
+      result = super->if_message~get_text( ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.

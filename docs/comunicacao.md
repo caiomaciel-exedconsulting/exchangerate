@@ -8,7 +8,7 @@ O responsável informou a criação dos sistemas e do cenário de comunicação.
 
 Importar no pacote `ZEXED_FI_TAXA_CAMBIO`, componente `ZCUSTOM_DEVELOPMENT`. A configuração `.abapgit.xml` usa somente `/src/`, sem criar uma hierarquia adicional de pacotes.
 
-Ativar o serviço outbound antes do cenário. Conferir no editor ADT que o cenário contém somente o serviço outbound HTTP `ZEXED_PTAX_REST`, sem serviços inbound e com autenticação outbound **Unauthenticated/None**. O XML deixa o cenário com publicação pendente (`PUBLISH_STATUS = u`); publicar localmente no ADT depois da conferência, para disponibilizá-lo no app Communication Arrangements. A serialização não comprova importação, ativação ou publicação no tenant.
+Ativar o serviço outbound antes do cenário. Conferir no editor ADT que o cenário contém somente o serviço outbound HTTP `ZEXED_PTAX_REST`, sem serviços inbound e com autenticação outbound **Unauthenticated/None**. O export atualizado pelo responsável no commit `163a64c` contém `PUBLISH_STATUS = p`. Em cada ambiente de destino, conferir a publicação local e a disponibilidade no app Communication Arrangements. O estado serializado do ambiente de origem não comprova a configuração do destino.
 
 O prefixo do serviço é `/olinda/servico/PTAX/versao/v1/odata`, sem barra final. No editor ele corresponde ao Default Path/Default URL do serviço vinculado ao cenário. O adapter habilita o prefixo e acrescenta `/CotacaoMoedaDia(...)` e os parâmetros de consulta. Não repetir o prefixo no caminho montado pelo adapter.
 

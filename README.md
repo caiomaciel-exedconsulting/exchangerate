@@ -2,7 +2,7 @@
 
 Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fechamento diário do BACEN e mantém taxas do tipo **M**, sempre pela **cotação de compra**, usando a BOI released `I_CurrencyExchangeRateTP_2`.
 
-**Entrega de fontes para pull pelo ADT.** O responsável confirmou ATC e ABAP Unit sem erros e a criação dos sistemas e do cenário de comunicação. Falta completar a autorização de acesso ao job: IAM App → Business Catalog → Business Role → usuário, conforme o [guia de autorizações](docs/autorizacoes.md). O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [validações e pendências](docs/validacao.md).
+**Entrega de fontes para pull pelo ADT.** O responsável confirmou ATC e ABAP Unit sem erros na versão anterior e publicou o Business Catalog e a comunicação. A primeira execução do job revelou uma data de referência em branco e um diagnóstico genérico. Esta correção normaliza datas vazias e preserva o detalhe das exceções; os novos testes ainda precisam ser executados no SAP. O template inicia em **simulação**, sem manutenção de taxas ou drafts. Consulte [correção e reexecução do job](docs/correcao-execucao-job.md) e [validações e pendências](docs/validacao.md).
 
 ## Comportamento
 
@@ -35,7 +35,7 @@ Application Job ABAP Cloud para SAP S/4HANA Cloud Public Edition. Consulta o fec
 6. Executar os testes ABAP Unit e ATC no ADT após importar alterações executáveis. Com as autorizações configuradas, executar primeiro o template `ZEXED_PTAX_DAILY` em simulação, conferir os sete resultados e abrir o Application Log.
 7. Validar a manutenção e a reexecução em DEV. Só depois configurar a recorrência às 07:00, com simulação desmarcada e datas de referência/cotação vazias. Configurar o fuso também na tela de agendamento.
 
-O pull não cria Communication System/Arrangement, Business Role ou sua atribuição ao usuário, nem agenda o job. Esta entrega também não contém o Business Catalog IAM e sua atribuição de app: a criação no ADT está descrita no guia de autorizações. O catálogo de job `ZEXED_PTAX_JOB` (SAJC) não substitui o Business Catalog IAM. A substituição operacional do RPA deve ocorrer depois do aceite, evitando dois escritores sobre as mesmas chaves.
+O pull não cria Communication System/Arrangement, Business Role ou sua atribuição ao usuário, nem agenda o job. O responsável incluiu no commit `163a64c` o Business Catalog IAM `ZEXED_PTAX` e sua atribuição `ZEXED_PTAX_0001`; conferir a configuração de cada ambiente no [guia de autorizações](docs/autorizacoes.md). O catálogo de job `ZEXED_PTAX_JOB` (SAJC) não substitui o Business Catalog IAM. A substituição operacional do RPA deve ocorrer depois do aceite, evitando dois escritores sobre as mesmas chaves.
 
 O idioma principal do repositório e dos objetos é **português**: `P` nos metadados SAP XML e `pt` nos arquivos AFF. Usar login **PT** no ADT. A versão inicial estava em inglês; para o erro `Current login language 'PT' does not match main language 'EN'`, atualizar a referência remota da branch `main` e repetir o pull com a versão corrigida. O pull não converte o idioma original de objetos que já tenham sido criados em inglês; esse caso exige verificar o estado dos objetos antes de qualquer recriação.
 
@@ -43,7 +43,7 @@ Para reprocessar, informar `P_QUOTATION` com a data econômica desejada. Essa da
 
 ## Objetos e implementação
 
-São 15 objetos de repositório: quatro interfaces, seis classes (incluindo a exceção), APLO, SAJC, SAJT, SCO1 e SCO3. Testes locais acompanham as classes aplicáveis em arquivos `.clas.testclasses.abap`.
+O núcleo contém 15 objetos: quatro interfaces, seis classes (incluindo a exceção), APLO, SAJC, SAJT, SCO1 e SCO3. O responsável acrescentou os exports do Business Catalog IAM e da atribuição de app. Testes locais acompanham as classes aplicáveis em arquivos `.clas.testclasses.abap`.
 
 `ZCL_EXED_PTAX_SERVICE` coordena os adapters de calendário, BACEN e persistência. `ZCL_EXED_PTAX_JOB` implementa `IF_APJ_RT_RUN` e registra boletins, pares, decisões, fatores, contadores e erros no log `ZEXED_PTAX`/`IMPORT`.
 

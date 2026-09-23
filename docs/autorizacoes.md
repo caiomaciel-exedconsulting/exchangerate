@@ -1,6 +1,6 @@
 # Autorizações para acessar e executar o job PTAX
 
-O roteiro inicial omitiu a configuração de acesso do usuário. Ativar os objetos e passar em ATC/ABAP Unit não conclui essa etapa. Este guia complementa a implantação no SAP S/4HANA Cloud Public Edition; a configuração abaixo ainda precisa ser realizada no tenant.
+O roteiro inicial omitiu a configuração de acesso do usuário. Ativar os objetos e passar em ATC/ABAP Unit não conclui essa etapa. O responsável posteriormente exportou o catálogo `ZEXED_PTAX` e a atribuição `ZEXED_PTAX_0001` no commit `163a64c` e iniciou uma execução do job. As etapas abaixo permanecem como roteiro para novos ambientes; os nomes sugeridos não exigem criar um segundo catálogo.
 
 ## Objetos e vínculos
 
@@ -9,7 +9,7 @@ O roteiro inicial omitiu a configuração de acesso do usuário. Ativar os objet
 | Catálogo de job (SAJC) | `ZEXED_PTAX_JOB` | Incluído nos fontes |
 | Template de job (SAJT) | `ZEXED_PTAX_DAILY` | Incluído nos fontes |
 | IAM App de autorização de início | `ZEXED_PTAX_JOB_SAJC` | Nome informado pelo responsável; gerada a partir do catálogo de job |
-| Business Catalog IAM | `ZEXED_BC_PTAX` | Nome sugerido para criação no ADT; pode ser substituído por catálogo existente apropriado |
+| Business Catalog IAM | `ZEXED_PTAX` | Exportado pelo responsável; `ZEXED_BC_PTAX` abaixo é apenas o exemplo original |
 | Business Role | `ZEXED_BR_PTAX` | Nome sugerido para criação no Fiori; pode ser substituído por role existente apropriada |
 | Business User | Usuário que agendará/executará o job | Atribuir a role no ambiente |
 
@@ -44,7 +44,7 @@ Permissões para consultar jobs/logs de outros usuários ou agendar em nome dele
 
 ## Repositório e configuração do ambiente
 
-Esta atualização fornece instruções; não cria catálogo, role ou vínculo de usuário no tenant. Após criar o Business Catalog e sua atribuição no ADT, incluí-los no staging/export do abapGit para versionar os objetos efetivamente gerados. Business Role e atribuição ao usuário devem ser mantidas no ambiente. O pull dos fontes atuais não executa essas etapas automaticamente.
+O assistente não criou catálogo, role ou vínculo de usuário no tenant. O responsável versionou o Business Catalog `ZEXED_PTAX` e sua atribuição em arquivos SIA1/SIA7. Business Role e atribuição ao usuário devem ser mantidas no ambiente; o pull desses fontes não configura automaticamente esses vínculos.
 
 **Publish Locally** disponibiliza o catálogo no desenvolvimento; para outros ambientes, seguir o processo de transporte e configuração correspondente.
 

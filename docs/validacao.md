@@ -1,21 +1,21 @@
 # Validação da entrega de fontes
 
-Esta entrega contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado. As verificações abaixo qualificam os fontes para importação e validação no ADT; não representam execução do job no SAP.
+O núcleo contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado, além dos exports IAM acrescentados pelo responsável. As verificações abaixo qualificam os fontes para importação e validação no ADT; não representam execução do job no SAP.
 
-**Atualização em 23/09/2026:** o responsável confirmou nesta conversa ATC e ABAP Unit sem erros e sistemas/cenário de comunicação criados. Resultado registrado conforme relato do responsável, sem nova execução independente pelo assistente ou novo relatório anexado. O acesso ao job permanece pendente da configuração de Business Catalog, Business Role e atribuição ao usuário. O procedimento omitido da entrega inicial foi incluído em [autorizacoes.md](autorizacoes.md).
+**Atualização em 23/09/2026:** o responsável confirmou ATC e ABAP Unit sem erros na versão anterior e sistemas/cenário de comunicação criados. Depois publicou o catálogo IAM e iniciou o job, que cancelou com referência vazia no log. A correção atual acrescenta sete testes de parâmetros e cinco de exceção: a suíte passa a 40 métodos, ainda sem execução desta versão no SAP. Os resultados anteriores são relato do responsável, sem execução independente pelo assistente. Consulte [correção da execução](correcao-execucao-job.md).
 
 ## Verificações executadas
 
 | Verificação | Resultado |
 |---|---|
-| abaplint 2.120.58, parser ABAP Cloud e nomenclatura, configuração publicada | 0 issues; 31 arquivos de objetos analisados |
+| abaplint 2.120.58, parser ABAP Cloud e nomenclatura, configuração publicada | 0 issues; 35 arquivos de objetos analisados na correção do job |
 | abaplint local, incluindo check_syntax e declarações de dependências | 0 issues; não substitui o compilador SAP |
 | APLO, SAJC e SAJT | Válidos nos schemas AFF v1 oficiais da SAP, com Ajv draft 2020 |
 | XML de metadados, comunicação e abapGit | 13 arquivos analisados sem erro de XML |
 | Inventário | 15 objetos; nomes e referências cruzadas conferidos |
 | Parâmetros do job | Seis parâmetros coerentes entre classe, catálogo e template |
 | Metadados ABAP | Linguagem Cloud, Unicode, categoria de exceção e indicadores de testes conferidos |
-| Formato dos fontes | UTF-8 sem BOM, término de linha e diff conferidos |
+| Formato dos fontes | Alterações desta correção em UTF-8 sem BOM; exports anteriores do responsável preservados; diff conferido |
 | Escrita standard | Sem manutenção direta de tabelas standard, COMMIT WORK ou WAIT UP TO nos fontes |
 
 O `abaplint.json` distribuído verifica parsing. A checagem adicional local usou declarações auxiliares de dependências standard e não valida a totalidade dos contratos EML, a save sequence, autorizações ou comportamento em execução. As dependências auxiliares e implementações standard consultadas não integram o repositório.
@@ -30,7 +30,9 @@ Leituras somente de consulta confirmaram API State C1 e contratos dos principais
 | ZCL_EXED_PTAX_CALENDAR | 5 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
 | ZCL_EXED_PTAX_RATE_STORE | 8 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
 | ZCL_EXED_PTAX_SERVICE | 7 | Suíte confirmada sem erros pelo responsável; sem novo detalhamento por método |
-| Total | 28 nos fontes | ABAP Unit sem erros, conforme confirmação do responsável em 23/09/2026 |
+| ZCL_EXED_PTAX_JOB | 7 | Novos testes de parâmetros; execução no SAP pendente |
+| ZCX_EXED_PTAX | 5 | Novos testes de mensagem e encadeamento; execução no SAP pendente |
+| Total | 40 nos fontes | Suíte anterior de 28 confirmada sem erros; reexecução da suíte ampliada pendente |
 
 Os testes acompanham os fontes em arquivos `.clas.testclasses.abap`. A existência e a análise estática desses arquivos não são resultados de ABAP Unit. Casos de integração com persistência, locks e save sequence exigem validação no tenant.
 
@@ -38,7 +40,7 @@ A revisão dos fontes também corrigiu a categoria da classe de exceção, a pre
 
 ## Correção dos erros de data/hora BACEN
 
-A correção atual parte do commit `fa1f431`, que inclui a última alteração do calendário feita pelo responsável. Essa alteração foi preservada.
+A correção anterior do parser BACEN partiu do commit `fa1f431`, que inclui a alteração do calendário feita pelo responsável. Essa alteração foi preservada.
 
 As imagens enviadas pelo responsável mostram dois erros: `MAP_PURCHASE_QUOTE` e `NO_BULLETIN_IS_NOT_ERROR`. Ambos passam pela mesma chamada, pois o segundo teste começa carregando uma cotação válida para verificar a limpeza do estado na resposta seguinte. O método ativo foi consultado no SAP; a linha 31 de `PARSE_RESPONSE`, indicada na pilha, corresponde à rejeição do formato de data/hora.
 
@@ -48,21 +50,21 @@ Dois métodos de regressão foram acrescentados: aceitação de segundos sem fra
 
 Depois desse ajuste, o responsável enviou três erros em `MAP_PURCHASE_QUOTE`, `NO_BULLETIN_IS_NOT_ERROR` e `ACCEPT_TIMESTAMP_PRECISION`. A linha 36 de `PARSE_RESPONSE`, confirmada pela consulta ao fonte ativo, é a comparação posterior ao formato. O operando `bulletin-timestamp+10(1)` é `STRING`, mas o literal `' '` é `CHAR`: a conversão implícita remove o espaço do literal, fazendo um espaço válido parecer diferente de texto vazio. Referência: [SAP — comparação de dados de caracteres](https://help.sap.com/doc/abapdocu_752_index_htm/7.52/en-US/abenlogexp_character.htm).
 
-A comparação redundante do separador foi removida; o padrão `\x20` continua exigindo exatamente um espaço. A comparação dos dez primeiros caracteres com a data solicitada permanece intacta. O teste de data divergente agora verifica a mensagem específica da exceção para datas anterior e posterior, evitando um falso sucesso causado por rejeição indevida do formato. Os casos positivos também conferem a data econômica retornada. A suíte continua com 28 métodos.
+A comparação redundante do separador foi removida; o padrão `\x20` continua exigindo exatamente um espaço. A comparação dos dez primeiros caracteres com a data solicitada permanece intacta. O teste de data divergente verifica a mensagem específica da exceção para datas anterior e posterior, evitando um falso sucesso causado por rejeição indevida do formato. Os casos positivos também conferem a data econômica retornada. Naquele ajuste a suíte permaneceu com 28 métodos; a correção posterior do job acrescentou 12.
 
 Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após a correção da comparação. As evidências PCRE2 acima pertencem à validação da expressão regular; não executam a semântica de comparação ABAP. Depois da entrega da correção no commit `50e7eee`, o responsável confirmou ATC e ABAP Unit sem erros. Nenhuma gravação de taxas foi necessária para o diagnóstico.
 
 ## Verificações pendentes no SAP
 
-1. Completar a autorização de acesso: Business Catalog com `ZEXED_PTAX_JOB_SAJC`, publicação local, Business Role com esse catálogo e atribuição ao usuário. Conferir acesso ao app Application Jobs e disponibilidade de `ZEXED_PTAX_DAILY`, conforme [autorizacoes.md](autorizacoes.md).
-2. Preservar os resultados de ATC/ABAP Unit da versão validada para rastreabilidade. Reexecutar após alterações executáveis; esta atualização de documentação não altera os fontes ABAP.
+1. Importar/ativar a correção de `ZCL_EXED_PTAX_JOB` e `ZCX_EXED_PTAX`, incluindo seus testes, e executar ATC e os 40 métodos de ABAP Unit. Os testes locais novos não executam o job, HTTP ou gravação de taxas.
+2. Repetir o diagnóstico com `P_SIMULATE = X`, datas vazias, calendário `BR` e fuso `BRAZIL`; conferir data válida e modo `SIMULACAO` no log. O usuário já iniciou o job após configurar acesso; manter o [guia de autorizações](autorizacoes.md) para outros usuários/ambientes.
 3. Conferir publicação e arrangement do cenário já criado e testar HTTPS com o BACEN a partir do tenant, conforme [comunicacao.md](comunicacao.md).
 4. Confirmar o calendário legado `BR`, seu mapeamento FHC, cobertura de datas, fatores de conversão e regras do fuso configurado. `BRAZIL` é o valor inicial do parâmetro; sua existência e correspondência ao fuso de Brasília precisam ser conferidas no tenant.
 5. Executar simulação com boletins conhecidos e conferir data, sete pares, orientação D/I, precisão, fatores e Application Log. Validar ausência de uma moeda sem impedir as demais e sem recuar a data.
 6. Em DEV, provar criação, igualdade, atualização e reexecução pela BOI. Validar autorizações, locks, concorrência, erro em um par com preservação dos demais, mensagem de falha do job e reconciliação após resultado de commit incerto.
 7. Após aceite operacional, configurar execução diária às 07:00 de Brasília, com datas vazias e simulação desmarcada. Coordenar a desativação do RPA para evitar manutenção concorrente.
 
-Na preparação inicial, o assistente não executou ativação SAP, ATC, ABAP Unit, gravação real de taxas, comunicação HTTPS do tenant ou agendamento produtivo. Posteriormente, o responsável informou a ativação, compartilhou os erros anteriores e confirmou ATC/ABAP Unit sem erros após as correções. Essa confirmação encerra a pendência dos testes relatados; acesso ao job e validações operacionais acima continuam pendentes. O template distribuído inicia em simulação.
+Na preparação inicial, o assistente não executou ativação SAP, ATC, ABAP Unit, gravação real de taxas, comunicação HTTPS do tenant ou agendamento produtivo. Posteriormente, o responsável informou a ativação, compartilhou os erros anteriores e confirmou ATC/ABAP Unit sem erros após as correções do parser. Essa confirmação se refere à versão anterior: a nova correção dos parâmetros e da exceção exige a reexecução indicada acima. O template distribuído inicia em simulação; o operador deve conferir o valor na execução agendada.
 
 ## Governança
 
