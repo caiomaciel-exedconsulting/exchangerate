@@ -1,0 +1,39 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "BACEN PTAX import - initial simulation defaults",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "catalogName": "ZEXED_PTAX_JOB"
+  },
+  "parameters": {
+    "singleValueParameters": [
+      {
+        "name": "P_REFERENCE",
+        "value": ""
+      },
+      {
+        "name": "P_QUOTATION",
+        "value": ""
+      },
+      {
+        "name": "P_CALENDAR",
+        "value": "BR"
+      },
+      {
+        "name": "P_TIMEZONE",
+        "value": "BRAZIL"
+      },
+      {
+        "name": "P_SIMULATE",
+        "value": "X"
+      },
+      {
+        "name": "P_COMSYS",
+        "value": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "BACEN PTAX exchange rate import",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "className": "ZCL_EXED_PTAX_JOB"
+  },
+  "sections": [
+    {
+      "name": "PTAX",
+      "title": "BACEN PTAX"
+    }
+  ],
+  "groups": [
+    {
+      "name": "DATES",
+      "title": "Quotation date",
+      "section": "PTAX"
+    },
+    {
+      "name": "EXECUTION",
+      "title": "Execution",
+      "section": "PTAX"
+    }
+  ],
+  "parameters": [
+    {
+      "name": "P_REFERENCE",
+      "title": "Reference date (blank: current date in business time zone)",
+      "group": "DATES"
+    },
+    {
+      "name": "P_QUOTATION",
+      "title": "Explicit quotation date (blank: previous working day)",
+      "group": "DATES"
+    },
+    {
+      "name": "P_CALENDAR",
+      "title": "Factory calendar legacy ID",
+      "group": "DATES",
+      "mandatory": true
+    },
+    {
+      "name": "P_TIMEZONE",
+      "title": "SAP business time zone (Brasilia)",
+      "group": "DATES",
+      "mandatory": true
+    },
+    {
+      "name": "P_SIMULATE",
+      "title": "Simulation: no exchange rate or draft changes",
+      "group": "EXECUTION",
+      "screenElement": "checkbox"
+    },
+    {
+      "name": "P_COMSYS",
+      "title": "Communication system ID (optional when unambiguous)",
+      "group": "EXECUTION"
+    }
+  ]
+}
