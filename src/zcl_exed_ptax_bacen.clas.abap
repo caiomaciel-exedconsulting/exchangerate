@@ -190,8 +190,9 @@ CLASS zcl_exed_ptax_bacen IMPLEMENTATION.
     IF bulletin-buy_rate <= 0 OR bulletin-bulletin_type <> 'Fechamento PTAX'.
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'bulletin or positive purchase rate is invalid' ).
     ENDIF.
+    " PCRE no ABAP ignora espaços literais; \x20 exige o separador data/hora.
     IF NOT matches( val = bulletin-timestamp
-      pcre = `^[0-9]{4}-[0-9]{2}-[0-9]{2} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,7})?$` ).
+      pcre = `^[0-9]{4}-[0-9]{2}-[0-9]{2}\x20([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,7})?$` ).
       RAISE EXCEPTION NEW zcx_exed_ptax( detail = 'BACEN quotation timestamp is invalid' ).
     ENDIF.
     IF bulletin-timestamp+0(10) <> expected_date

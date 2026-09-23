@@ -8,6 +8,8 @@ CLASS bacen_tests DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLES
     METHODS query_currency_and_date FOR TESTING RAISING zcx_exed_ptax.
     METHODS reject_bad_requests FOR TESTING.
     METHODS map_purchase_quote FOR TESTING RAISING zcx_exed_ptax.
+    METHODS accept_timestamp_precision FOR TESTING RAISING zcx_exed_ptax.
+    METHODS reject_invalid_timestamps FOR TESTING.
     METHODS no_bulletin_is_not_error FOR TESTING RAISING zcx_exed_ptax.
     METHODS reject_bad_json_contract FOR TESTING.
     METHODS reject_wrong_quote FOR TESTING.
@@ -73,6 +75,44 @@ CLASS bacen_tests IMPLEMENTATION.
     cl_abap_unit_assert=>assert_false( quote-found ).
     cl_abap_unit_assert=>assert_initial( quote-buy_rate ).
     cl_abap_unit_assert=>assert_equals( act = quote-quotation_date exp = '20240329' ).
+  ENDMETHOD.
+
+  METHOD accept_timestamp_precision.
+    DATA timestamps TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    timestamps = VALUE #(
+      ( `2024-03-28 00:00:00` )
+      ( `2024-03-28 14:40:02.0` )
+      ( `2024-03-28 14:40:02.052` )
+      ( `2024-03-28 23:59:59.1234567` ) ).
+    LOOP AT timestamps INTO DATA(bulletin_timestamp).
+      DATA(quote) = bacen->parse_response(
+        currency = 'EUR' requested_date = '20240328'
+        json_text = `{"value":[{"cotacaoCompra":5.39520,"dataHoraCotacao":"`
+          && bulletin_timestamp && `","tipoBoletim":"Fechamento PTAX"}]}` ).
+      cl_abap_unit_assert=>assert_true( quote-found ).
+      cl_abap_unit_assert=>assert_equals(
+        act = quote-bulletin_timestamp exp = bulletin_timestamp ).
+      cl_abap_unit_assert=>assert_equals(
+        act = quote-buy_rate exp = CONV decfloat34( '5.39520' ) ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD reject_invalid_timestamps.
+    DATA timestamps TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    timestamps = VALUE #(
+      ( `2024-03-2814:40:02.052` )
+      ( `2024-03-28T14:40:02.052` )
+      ( `2024-03-28  14:40:02.052` )
+      ( `2024-03-28\t14:40:02.052` )
+      ( `2024-03-28 24:00:00` )
+      ( `2024-03-28 14:60:02` )
+      ( `2024-03-28 14:40:60` )
+      ( `2024-03-28 14:40:02.` )
+      ( `2024-03-28 14:40:02.12345678` ) ).
+    LOOP AT timestamps INTO DATA(bulletin_timestamp).
+      expect_rejected( `{"value":[{"cotacaoCompra":5.39520,"dataHoraCotacao":"`
+        && bulletin_timestamp && `","tipoBoletim":"Fechamento PTAX"}]}` ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD reject_bad_json_contract.
