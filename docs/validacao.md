@@ -1,8 +1,24 @@
 # Validação da entrega de fontes
 
-O núcleo contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado, além dos exports IAM acrescentados pelo responsável. As verificações abaixo qualificam os fontes para importação e validação no ADT; não representam execução do job no SAP.
+O núcleo contém 15 objetos ABAP Cloud, com gravação independente por par conforme ajuste aprovado, além dos exports IAM acrescentados pelo responsável. Este documento distingue verificações locais, confirmação do responsável e execuções do job demonstradas nos logs enviados.
 
-**Atualização em 23/09/2026:** depois da correção dos parâmetros, a imagem enviada pelo responsável confirmou simulação concluída, cinco boletins para 22/09/2026 e sete criações previstas sem erros. A manutenção falhou em Activate nos sete pares, com descarte antes dos commits. A correção atual preserva o PID na entrada de ativação e acrescenta diagnóstico de FAILED e sete testes. A baseline sincronizada pelo responsável continha 39 testes; agora são 46, ainda sem execução desta versão no SAP. Consulte [correção da ativação](correcao-ativacao-boi.md).
+**Encerramento em 23/09/2026:** o responsável declarou o desenvolvimento concluído e transferiu o teste integrado de ausência parcial de boletim para o [backlog](backlog.md). A revisão de código entregue é `ad1137dacf66c6421618abb8e726e3466da49b06`. As atualizações posteriores deste registro são documentais.
+
+Depois da correção dos parâmetros, a simulação concluiu com cinco boletins para 22/09/2026 e sete criações previstas. A primeira manutenção falhou em Activate antes dos commits. Após a correção que preserva o PID na ativação, os logs compartilhados demonstraram as execuções abaixo. Consulte o diagnóstico histórico em [correcao-ativacao-boi.md](correcao-ativacao-boi.md).
+
+## Resultados funcionais observados nos logs
+
+Todos os resultados abaixo usam cotação de 22/09/2026, tipo M/compra, calendário BR e fuso BRAZIL.
+
+| Cenário | Resultado informado pelo log | Evidência e limite |
+|---|---|---|
+| Simulação | 7 criações previstas; 0 erros | Cinco boletins consultados; modo SIMULACAO, sem manutenção |
+| Primeira manutenção após a correção | 7 criações; 0 erros | Cada par informa leitura de confirmação após seu COMMIT |
+| Reexecução da mesma data | 7 iguais; 0 criações/atualizações/erros | Taxas e fatores revalidados, sem alteração ou COMMIT |
+| Correção de divergência dos dois pares USD | 2 atualizações; 5 iguais; 0 erros | BRL/USD I e USD/BRL D atualizados para 5,11550; confirmação após COMMIT |
+| Reexecução após a atualização | 7 iguais; 0 criações/atualizações/erros | Demonstra idempotência após a atualização no cenário exercitado |
+
+As evidências são as imagens dos logs enviadas pelo responsável nesta conversa em 23/09/2026. O assistente não executou as gravações nem releu diretamente os registros nesta etapa. Os logs demonstram criação, igualdade, atualização direta/indireta e reprocessamento; não demonstram ausência parcial, concorrência ou todos os limites de fatores/precisão.
 
 ## Verificações executadas
 
@@ -54,17 +70,15 @@ A comparação redundante do separador foi removida; o padrão `\x20` continua e
 
 Parser, `no_prefixes` e checagem estática local passaram sem ocorrências após a correção da comparação. As evidências PCRE2 acima pertencem à validação da expressão regular; não executam a semântica de comparação ABAP. Depois da entrega da correção no commit `50e7eee`, o responsável confirmou ATC e ABAP Unit sem erros. Nenhuma gravação de taxas foi necessária para o diagnóstico.
 
-## Verificações pendentes no SAP
+## Limites da evidência e operação posterior
 
-1. Importar/ativar `ZCL_EXED_PTAX_RATE_STORE` e seus testes; executar ATC e os 46 métodos de ABAP Unit. Os novos testes não executam EML, HTTP ou gravação de taxas.
-2. Repetir em DEV a manutenção de 22/09/2026 e depois a reexecução da mesma data, conforme [correcao-ativacao-boi.md](correcao-ativacao-boi.md). Se as chaves continuarem ausentes, esperar sete criações confirmadas na primeira e sete iguais na segunda.
-3. A simulação recebida comprova consulta HTTPS do job às cinco moedas nessa execução. Para outros ambientes, conferir cenário, arrangement e autorizações conforme [comunicacao.md](comunicacao.md) e [autorizacoes.md](autorizacoes.md).
-4. A execução automática usou referência 23/09/2026 e encontrou 22/09/2026 pelo calendário BR. Ainda validar feriados, virada de ano, cobertura do calendário, fatores diferentes de 1/1 e limites de precisão relevantes.
-5. Validar ausência de uma moeda sem impedir as demais e sem recuar a data. A simulação recebida encontrou boletins de todas as moedas e não cobre esse cenário.
-6. Em DEV, provar criação, igualdade, atualização e reexecução pela BOI. Validar autorizações, locks, concorrência, erro em um par com preservação dos demais, mensagem de falha do job e reconciliação após resultado de commit incerto.
-7. Após aceite operacional, configurar execução diária às 07:00 de Brasília, com datas vazias e simulação desmarcada. Coordenar a desativação do RPA para evitar manutenção concorrente.
+- **Backlog aceito:** teste integrado de ausência parcial de boletim, ainda `NOT_RUN`. A cobertura unitária existente não substitui essa execução; detalhes em [backlog.md](backlog.md).
+- **ABAP Unit/ATC:** o responsável confirmou anteriormente resultado sem erros. Há 46 métodos nos fontes atuais; não foi recebido relatório completo da reexecução dessa revisão. A conclusão aceita não transforma essa lacuna de evidência em um resultado de teste.
+- **Cenários não demonstrados pelos logs recebidos:** feriados, virada de ano, limites de calendário, fatores diferentes de 1/1, precisão extrema, locks/concorrência, falha parcial de gravação e reconciliação de commit incerto. Permanecem limites da cobertura observada; não são declarados como executados.
+- **Outros ambientes:** conferir comunicação e autorizações conforme [comunicacao.md](comunicacao.md) e [autorizacoes.md](autorizacoes.md). Objetos ativados e uma execução bem-sucedida não comprovam a configuração de outro ambiente.
+- **Operação recorrente:** execução diária às 07:00 de Brasília continua sendo a configuração prevista. Não foi apresentada evidência do agendamento ou da desativação do RPA. No agendamento, conferir datas vazias, simulação desmarcada, usuário e fuso da tela de recorrência. O template distribuído inicia em simulação.
 
-O assistente não executou o job, EML ou gravação real de taxas. O responsável compartilhou as execuções de simulação e manutenção descritas acima e a confirmação anterior de ATC/ABAP Unit sem erros. Esses resultados não substituem a revalidação da nova correção de Activate. O template distribuído inicia em simulação; o operador deve conferir o valor na execução agendada.
+O desenvolvimento foi concluído por decisão explícita do responsável. Esse registro documenta o aceite e seus limites, sem criar aprovação, gate ou certificação formal do Harness.
 
 ## Governança
 
